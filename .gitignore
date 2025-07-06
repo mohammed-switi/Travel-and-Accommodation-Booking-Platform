@@ -53,3 +53,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+
+# Ignore actual config with secrets
+appsettings.json
+appsettings.Development.json
