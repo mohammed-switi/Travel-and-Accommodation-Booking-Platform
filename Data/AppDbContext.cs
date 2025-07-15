@@ -55,6 +55,13 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<Hotel>()
+            .HasOne(h => h.MainImage)
+            .WithMany()
+            .HasForeignKey(h => h.MainImageId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        
+        modelBuilder.Entity<Hotel>()
             .Property(h => h.Amenities)
             .HasConversion<string>();
     }

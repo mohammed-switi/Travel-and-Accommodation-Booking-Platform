@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
 
-public class HotelService(AppDbContext context,ILogger logger) : IHotelService
+public class HotelService(AppDbContext context, ILogger logger) : IHotelService
 {
     public async Task<List<HotelSearchResultDto>> SearchHotelsAsync(SearchHotelsDto dto)
     {
         if (dto.CheckInDate >= dto.CheckOutDate)
         {
-           logger.LogError("Check-out date must be after check-in date"); 
+            logger.LogError("Check-out date must be after check-in date");
             throw new ArgumentException("Check-out date must be after check-in date.");
         }
 
@@ -40,13 +40,13 @@ public class HotelService(AppDbContext context,ILogger logger) : IHotelService
         if (dto.RoomTypes?.Any() == true)
             query = query.Where(h => h.Rooms.Any(r => dto.RoomTypes.Contains(r.Type)));
 
-        // TODO: Check room availability by date logic here
-        // if (dto.CheckInDate != default || dto.CheckOutDate != default)
-        // {
-        //     query = query.Where(!context.BookingItems.Any(b =>
-        //         dto.CheckInDate < b.Ch &&
-        //         search.CheckOutDate > b.CheckInDate));
-        // }
+        if (dto.CheckInDate != default && dto.CheckOutDate != default)
+        {
+            query = query.Where(h => !context.BookingItems
+                .Where(b => b.CheckOutDate > dto.CheckInDate && b.CheckInDate < dto.CheckOutDate)
+                .Any(b => b.Room.HotelId == h.Id));
+        }
+
         var result = await query
             .Select(h => new HotelSearchResultDto
             {
@@ -54,7 +54,7 @@ public class HotelService(AppDbContext context,ILogger logger) : IHotelService
                 Name = h.Name,
                 City = h.City.Name,
                 StarRating = h.StarRating,
-                ImageUrl = h.Images.First().Url,
+                ImageUrl = h.MainImage.Url,
                 MinRoomPrice = h.Rooms.Min(r => r.PricePerNight),
             })
             .ToListAsync();

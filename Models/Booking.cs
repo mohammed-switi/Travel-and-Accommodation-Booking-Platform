@@ -8,9 +8,7 @@ public class Booking
 
     public DateTime BookingDate { get; set; } = DateTime.UtcNow;
 
-    public DateTime CheckInDate { get; set; }
-
-    public DateTime CheckOutDate { get; set; }
+   
 
     public decimal TotalPrice { get; set; }
 

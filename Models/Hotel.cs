@@ -28,7 +28,10 @@ public class Hotel
 
     public ICollection<Room> Rooms { get; set; }
 
+    public int? MainImageId { get; set; }
 
+    [ForeignKey("MainImageId")]
+    public HotelImage MainImage { get; set; }
     public ICollection<HotelImage> Images { get; set; }
 
     public ICollection<Review> Reviews { get; set; }
