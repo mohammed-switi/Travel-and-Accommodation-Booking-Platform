@@ -21,13 +21,13 @@ public class HotelService(AppDbContext context, ILogger logger) : IHotelService
 
         if (dto.MinPrice.HasValue)
             query = query.Where(h => h.Rooms.Any(r => r.PricePerNight >= dto.MinPrice));
+        
         if (dto.MaxPrice.HasValue)
             query = query.Where(h => h.Rooms.Any(r => r.PricePerNight <= dto.MaxPrice));
 
         if (dto.StarRating.HasValue)
             query = query.Where(h => h.StarRating >= dto.StarRating);
 
-        // Filter by amenities
 
         if (dto.Amenities?.Any() == true)
         {
@@ -36,24 +36,19 @@ public class HotelService(AppDbContext context, ILogger logger) : IHotelService
         }
 
 
-        // Filter by room types
         if (dto.RoomTypes?.Any() == true)
             query = query.Where(h => h.Rooms.Any(r => dto.RoomTypes.Contains(r.Type)));
 
         if (dto.CheckInDate != default && dto.CheckOutDate != default)
-        {
             query = query.Where(h => !context.BookingItems
                 .Where(b => b.CheckOutDate > dto.CheckInDate && b.CheckInDate < dto.CheckOutDate)
                 .Any(b => b.Room.HotelId == h.Id));
-        }
 
         if (dto.Adults.HasValue || dto.Children.HasValue || dto.Rooms.HasValue)
-        {
             query = query.Where(h => h.Rooms.Any(r =>
                 (!dto.Adults.HasValue || r.MaxAdults >= dto.Adults) &&
                 (!dto.Children.HasValue || r.MaxChildren >= dto.Children) &&
                 (!dto.Rooms.HasValue || r.Quantity >= dto.Rooms)));
-        }
 
         var result = await query
             .Select(h => new HotelSearchResultDto
@@ -63,14 +58,11 @@ public class HotelService(AppDbContext context, ILogger logger) : IHotelService
                 City = h.City.Name,
                 StarRating = h.StarRating,
                 ImageUrl = h.MainImage.Url,
-                MinRoomPrice = h.Rooms.Min(r => r.PricePerNight),
+                MinRoomPrice = h.Rooms.Min(r => r.PricePerNight)
             })
             .ToListAsync();
 
-        if (!result.Any())
-        {
-            logger.LogWarning("No hotels found matching the search criteria.");
-        }
+        if (!result.Any()) logger.LogWarning("No hotels found matching the search criteria.");
 
         return result;
     }
