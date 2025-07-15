@@ -38,4 +38,22 @@ public class AuthController(AuthService authService) : ControllerBase
             return Unauthorized(new { message = e.Message });
         }
     }
+
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        try
+        {
+            await authService.ResetPasswordAsync(dto);
+            return Ok(new { Message = "Password reset successful." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
 }
