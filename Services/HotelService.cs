@@ -47,6 +47,14 @@ public class HotelService(AppDbContext context, ILogger logger) : IHotelService
                 .Any(b => b.Room.HotelId == h.Id));
         }
 
+        if (dto.Adults.HasValue || dto.Children.HasValue || dto.Rooms.HasValue)
+        {
+            query = query.Where(h => h.Rooms.Any(r =>
+                (!dto.Adults.HasValue || r.MaxAdults >= dto.Adults) &&
+                (!dto.Children.HasValue || r.MaxChildren >= dto.Children) &&
+                (!dto.Rooms.HasValue || r.Quantity >= dto.Rooms)));
+        }
+
         var result = await query
             .Select(h => new HotelSearchResultDto
             {
@@ -59,6 +67,10 @@ public class HotelService(AppDbContext context, ILogger logger) : IHotelService
             })
             .ToListAsync();
 
+        if (!result.Any())
+        {
+            logger.LogWarning("No hotels found matching the search criteria.");
+        }
 
         return result;
     }

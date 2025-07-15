@@ -14,11 +14,11 @@ public class Room
 
     public decimal Discount { get; set; }
 
-    public int Adults { get; set; }
+    public int MaxAdults { get; set; }
 
-    public int Children { get; set; }
-
-    public bool IsAvailable { get; set; } = true;
+    public int MaxChildren { get; set; }
+    
+    public int Quantity { get; set; } = 1;
 
     [ForeignKey("Hotel")] public int HotelId { get; set; }
 
@@ -27,4 +27,6 @@ public class Room
     public ICollection<BookingItem> BookingItems { get; set; }
     
     public RoomType Type { get; set; } = RoomType.Standard;
+    
+    
 }
