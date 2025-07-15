@@ -18,4 +18,5 @@ public class City
     public DateTime? UpdatedAt { get; set; }
 
     public ICollection<Hotel> Hotels { get; set; }
+    
 }

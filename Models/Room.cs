@@ -10,14 +10,16 @@ public class Room
 
     public decimal PricePerNight { get; set; }
 
+
+    public decimal Discount { get; set; }
+
     public int Adults { get; set; }
 
     public int Children { get; set; }
 
     public bool IsAvailable { get; set; } = true;
 
-    [ForeignKey("Hotel")]
-    public int HotelId { get; set; }
+    [ForeignKey("Hotel")] public int HotelId { get; set; }
 
     public Hotel Hotel { get; set; }
 

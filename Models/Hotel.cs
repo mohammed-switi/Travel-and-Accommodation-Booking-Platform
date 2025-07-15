@@ -31,4 +31,6 @@ public class Hotel
     public ICollection<HotelImage> Images { get; set; }
 
     public ICollection<Review> Reviews { get; set; }
+    
+    public Boolean IsActive { get; set; } = true;
 }
