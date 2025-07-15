@@ -1,3 +1,5 @@
+using Final_Project.Enums;
+
 namespace Final_Project.Models;
 
 public class BookingItem
@@ -15,4 +17,5 @@ public class BookingItem
     public decimal Price { get; set; }
 
     public int Nights { get; set; }
+    
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Final_Project.Enums;
 
 namespace Final_Project.Models;
 public class Hotel
@@ -33,4 +34,6 @@ public class Hotel
     public ICollection<Review> Reviews { get; set; }
     
     public Boolean IsActive { get; set; } = true;
+    
+    public Amenities Amenities { get; set; }
 }
