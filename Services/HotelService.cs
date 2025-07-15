@@ -47,7 +47,6 @@ public class HotelService(AppDbContext context,ILogger logger) : IHotelService
         //         dto.CheckInDate < b.Ch &&
         //         search.CheckOutDate > b.CheckInDate));
         // }
-
         var result = await query
             .Select(h => new HotelSearchResultDto
             {
@@ -55,10 +54,11 @@ public class HotelService(AppDbContext context,ILogger logger) : IHotelService
                 Name = h.Name,
                 City = h.City.Name,
                 StarRating = h.StarRating,
-                ImageUrl = h.Image.Url,
+                ImageUrl = h.Images.First().Url,
                 MinRoomPrice = h.Rooms.Min(r => r.PricePerNight),
             })
             .ToListAsync();
+
 
         return result;
     }

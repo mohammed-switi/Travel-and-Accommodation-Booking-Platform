@@ -53,8 +53,6 @@ public class AppDbContext : DbContext
             .Property(r => r.Type)
             .HasConversion<string>();
 
-        modelBuilder.Entity<Hotel>()
-            .HasOne<HotelImage>(h => h.Image);
 
         modelBuilder.Entity<Hotel>()
             .Property(h => h.Amenities)

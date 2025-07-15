@@ -28,7 +28,6 @@ public class Hotel
 
     public ICollection<Room> Rooms { get; set; }
 
-    public HotelImage Image { get; set; }
 
     public ICollection<HotelImage> Images { get; set; }
 
