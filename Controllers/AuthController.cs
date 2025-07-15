@@ -1,6 +1,41 @@
+using Final_Project.DTOs;
+using Final_Project.Services;
+using Microsoft.AspNetCore.Mvc;
+
 namespace Final_Project.Controllers;
 
-public class AuthController
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController(AuthService authService) : ControllerBase
 {
-    
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+    {
+        try
+        {
+            var newUser = await authService.RegisterAsync(registerDto);
+            return Ok(new { message = "User Registered successfully", userId = newUser.Id });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid login data.");
+
+        try
+        {
+            var token = await authService.LoginAsync(loginDto);
+            return Ok(new { token });
+        }
+        catch (Exception e)
+        {
+            return Unauthorized(new { message = e.Message });
+        }
+    }
 }
