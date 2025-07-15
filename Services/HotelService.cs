@@ -41,21 +41,21 @@ public class HotelService(AppDbContext context,ILogger logger) : IHotelService
             query = query.Where(h => h.Rooms.Any(r => dto.RoomTypes.Contains(r.Type)));
 
         // TODO: Check room availability by date logic here
-        if (dto.CheckInDate != default || dto.CheckOutDate != default)
-        {
-            query = query.Where(!context.BookingItems.Any(b =>
-                dto.CheckInDate < b.Ch &&
-                search.CheckOutDate > b.CheckInDate));
-        }
+        // if (dto.CheckInDate != default || dto.CheckOutDate != default)
+        // {
+        //     query = query.Where(!context.BookingItems.Any(b =>
+        //         dto.CheckInDate < b.Ch &&
+        //         search.CheckOutDate > b.CheckInDate));
+        // }
 
         var result = await query
             .Select(h => new HotelSearchResultDto
             {
                 Id = h.Id,
                 Name = h.Name,
-                City = h.City,
+                City = h.City.Name,
                 StarRating = h.StarRating,
-                ImageUrl = h.ImageUrl,
+                ImageUrl = h.Image.Url,
                 MinRoomPrice = h.Rooms.Min(r => r.PricePerNight),
             })
             .ToListAsync();
