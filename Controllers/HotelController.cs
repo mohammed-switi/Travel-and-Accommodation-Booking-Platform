@@ -21,4 +21,14 @@ public class HotelController(IHotelService hotelService): ControllerBase
             return BadRequest(new { Message = ex.Message });
         }
     }
+    
+     [HttpGet("{hotelId}")]
+        public async Task<IActionResult> GetHotelDetails(int hotelId, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut)
+        {
+            var details = await hotelService.GetHotelDetailsAsync(hotelId, checkIn, checkOut);
+    
+            if (details == null) return NotFound();
+    
+            return Ok(details);
+        }
 }
