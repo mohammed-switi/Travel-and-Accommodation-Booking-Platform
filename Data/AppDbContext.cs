@@ -7,7 +7,9 @@ using Microsoft.EntityFrameworkCore;
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) { }
+        : base(options)
+    {
+    }
 
     public DbSet<User> Users { get; set; }
 
@@ -50,6 +52,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Room>()
             .Property(r => r.Type)
             .HasConversion<string>();
+
+        modelBuilder.Entity<Hotel>()
+            .HasOne<HotelImage>(h => h.Image);
 
         modelBuilder.Entity<Hotel>()
             .Property(h => h.Amenities)
