@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using Final_Project.Enums;
 
 namespace Final_Project.Models;
 
@@ -24,4 +25,6 @@ public class Room
     public Hotel Hotel { get; set; }
 
     public ICollection<BookingItem> BookingItems { get; set; }
+    
+    public RoomType Type { get; set; } = RoomType.Standard;
 }
