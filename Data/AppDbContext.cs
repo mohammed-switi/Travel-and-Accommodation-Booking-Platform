@@ -46,5 +46,13 @@ public class AppDbContext : DbContext
             .HasOne(rv => rv.Hotel)
             .WithMany()
             .HasForeignKey(rv => rv.HotelId);
+
+        modelBuilder.Entity<Room>()
+            .Property(r => r.Type)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Hotel>()
+            .Property(h => h.Amenities)
+            .HasConversion<string>();
     }
 }
