@@ -9,14 +9,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Final_Project.Services;
 
-public class AuthService(AppDbContext context, IPasswordHasher<User> passwordHasher, IConfiguration configuration)
+public class AuthService(AppDbContext context, IPasswordHasher<User> passwordHasher, IConfiguration configuration, ILogger<AuthService> logger)
     : IAuthService
 {
     public async Task<User> RegisterAsync(RegisterDto newUser)
     {
         if (await context.Users.AnyAsync(user => user.Email == newUser.Email.ToLower()))
             throw new InvalidOperationException("Email already exists.");
-        
+       logger.LogInformation("Registering new user with email: {Email}", newUser.Email); 
         var user = new User
         {
             FullName = newUser.FullName,
@@ -28,7 +28,7 @@ public class AuthService(AppDbContext context, IPasswordHasher<User> passwordHas
 
         context.Users.Add(user);
         await context.SaveChangesAsync();
-
+        logger.LogInformation("User registered successfully with ID: {UserId}", user.Id);
         return user;
     }
    

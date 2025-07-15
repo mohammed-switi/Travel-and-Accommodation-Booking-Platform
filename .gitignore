@@ -58,3 +58,5 @@ nunit-*.xml
 # Ignore actual config with secrets
 appsettings.json
 appsettings.Development.json
+
+core
