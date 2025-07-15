@@ -1,5 +1,6 @@
 using Final_Project.Data;
 using Final_Project.DTOs;
+using Final_Project.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
@@ -66,4 +67,10 @@ public class HotelService(AppDbContext context, ILogger logger) : IHotelService
 
         return result;
     }
+
+    public Task<HotelDetailsDto> GetHotelDetailsAsync(int hotelId, DateTime? checkIn, DateTime? checkOut)
+    {
+        throw new NotImplementedException();
+    }
 }
+    
