@@ -6,6 +6,7 @@ using Final_Project.Services;
 namespace Final_Project.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/home/[controller]")]
 public class HomeController(IHomeService homeService) : ControllerBase
 {

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
 
-public class HotelService(AppDbContext context,ImageService imageService, IRoomAvailabilityService roomAvailabilityService, ILogger logger) : IHotelService
+public class HotelService(AppDbContext context,IImageService imageService, IRoomAvailabilityService roomAvailabilityService, ILogger<HotelService> logger) : IHotelService
 {
     public async Task<List<HotelSearchResultDto>> SearchHotelsAsync(SearchHotelsDto dto)
     {
