@@ -28,5 +28,7 @@ public class Room
     
     public RoomType Type { get; set; } = RoomType.Standard;
     
+    public string ImageUrl { get; set; } 
+    
     
 }

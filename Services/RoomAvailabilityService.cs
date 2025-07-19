@@ -46,5 +46,15 @@ public class RoomAvailabilityService(AppDbContext context) : IRoomAvailabilitySe
         }).ToList();
     }
     
+     public async Task<bool> IsRoomAvailableAsync(int roomId, DateTime checkInDate, DateTime checkOutDate)
+        {
+            var overlappingBookings = await context.BookingItems
+                .Where(bi => bi.RoomId == roomId &&
+                             !(bi.CheckOutDate <= checkInDate || bi.CheckInDate >= checkOutDate))
+                .AnyAsync();
+    
+            return !overlappingBookings;
+        }
+    
     
 }
