@@ -22,6 +22,9 @@ public class AppDbContext : DbContext
 
     public DbSet<HotelImage> HotelImages { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<BookingCart> BookingCarts { get; set; }
+    public DbSet<BookingCartItem> BookingCartItems { get; set; }
+    
 
     public DbSet<RecentlyViewedHotel> RecentlyViewedHotels { get; set; }
 
@@ -31,7 +34,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<BookingItem>()
             .HasOne(bi => bi.Booking)
-            .WithMany(b => b.BookingItems)
+            .WithMany(b => b.Items)
             .HasForeignKey(bi => bi.BookingId);
 
         modelBuilder.Entity<BookingItem>()

@@ -90,10 +90,10 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
         try
         {
             var trendingCities = await context.Bookings
-                .Include(b => b.BookingItems)
+                .Include(b => b.Items)
                 .ThenInclude(bi => bi.Room)
                 .ThenInclude(r => r.Hotel)
-                .SelectMany(b => b.BookingItems.Select(bi => bi.Room.Hotel.City))
+                .SelectMany(b => b.Items.Select(bi => bi.Room.Hotel.City))
                 .GroupBy(city => city)
                 .Select(g => new { City = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
