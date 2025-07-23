@@ -113,12 +113,13 @@ public class AuthService(
         await context.SaveChangesAsync();
     }
 
-    public async Task LogoutAsync(ClaimsPrincipal User)
+    public async Task LogoutAsync(ClaimsPrincipal? user)
     {
         try
         {
-            var jwtId = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value ?? throw new InvalidOperationException("JWT ID not found in claims.");
-           
+            var jwtId = user.FindFirst(JwtRegisteredClaimNames.Jti)?.Value ??
+                        throw new InvalidOperationException("JWT ID not found in claims.");
+
             if (string.IsNullOrEmpty(jwtId))
             {
                 logger.LogWarning("JWT ID not found in claims.");
@@ -126,7 +127,7 @@ public class AuthService(
             }
 
             logger.LogInformation("Logging out user with JWT ID: {JwtID}", jwtId);
-           await SaveJwtTokenToCache(jwtId ); // Invalidate the token by saving an empty string
+            await SaveJwtTokenToCache(jwtId); // Invalidate the token by saving an empty string
         }
         catch (Exception e)
         {
@@ -137,7 +138,7 @@ public class AuthService(
 
     private async Task SaveJwtTokenToCache(string jwtId)
     {
-        if (string.IsNullOrEmpty(jwtId) )
+        if (string.IsNullOrEmpty(jwtId))
         {
             logger.LogWarning("JWT ID or token is null or empty. Cannot save to cache.");
             return;

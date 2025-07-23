@@ -1,5 +1,6 @@
 using System.Configuration;
 using Final_Project.Data;
+using Final_Project.Middlewares;
 using Final_Project.Models;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Identity;
@@ -9,8 +10,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -59,7 +59,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-    options.InstanceName = "TravleCache:";
+    options.InstanceName = "TravelCache:";
 });
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
@@ -74,7 +74,7 @@ builder.Services.AddAuthentication("Bearer")
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey =
                 new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                    System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? string.Empty))
         };
     });
 
@@ -89,17 +89,14 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI(options =>
-        {
-            options.EnablePersistAuthorization();
-        }
-
+    app.UseSwaggerUI(options => { options.EnablePersistAuthorization(); }
     );
 }
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseMiddleware<JwtBlacklistMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Final_Project.DTOs;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +54,23 @@ public class AuthController(IAuthService authService) : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { Message = ex.Message });
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(ClaimsPrincipal? user )
+    {
+        try
+        {
+            if (user == null || !user.Identity!.IsAuthenticated)
+                return Unauthorized(new { message = "User is not authenticated" });
+            await authService.LogoutAsync(user);
+            return Ok(new { message = "User logged out successfully" });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { message = e.Message });
         }
     }
 }

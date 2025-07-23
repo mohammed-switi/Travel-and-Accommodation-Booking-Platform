@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Final_Project.DTOs;
 using Final_Project.Models;
 
@@ -10,6 +11,6 @@ public interface IAuthService
 
     Task ForgotPasswordAsync(ForgotPasswordDto dto);
 
-
+    Task LogoutAsync(ClaimsPrincipal? user);
     Task ResetPasswordAsync(ResetPasswordDto dto);
 }
