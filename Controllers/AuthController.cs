@@ -59,13 +59,13 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
     
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout(ClaimsPrincipal? user )
+    public async Task<IActionResult> Logout()
     {
         try
         {
-            if (user == null || !user.Identity!.IsAuthenticated)
+            if (User == null || !User.Identity!.IsAuthenticated)
                 return Unauthorized(new { message = "User is not authenticated" });
-            await authService.LogoutAsync(user);
+            await authService.LogoutAsync(User);
             return Ok(new { message = "User logged out successfully" });
         }
         catch (Exception e)
