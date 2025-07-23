@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Final_Project.DTOs;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -63,7 +62,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         try
         {
-            if (User == null || !User.Identity!.IsAuthenticated)
+            if (ReferenceEquals(User, null) || !User.Identity!.IsAuthenticated)
                 return Unauthorized(new { message = "User is not authenticated" });
             await authService.LogoutAsync(User);
             return Ok(new { message = "User logged out successfully" });

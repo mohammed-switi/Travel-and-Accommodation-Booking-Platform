@@ -24,12 +24,10 @@ namespace Final_Project.Services
                 .ThenInclude(i => i.Room)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (cart == null)
-            {
-                cart = new BookingCart { UserId = userId };
-                context.BookingCarts.Add(cart);
-                await context.SaveChangesAsync();
-            }
+            if (cart != null) return cart;
+            cart = new BookingCart { UserId = userId };
+            context.BookingCarts.Add(cart);
+            await context.SaveChangesAsync();
 
             return cart;
         }
