@@ -1,3 +1,4 @@
+using System.Configuration;
 using Final_Project.Data;
 using Final_Project.Models;
 using Final_Project.Services;
@@ -54,6 +55,12 @@ builder.Services.AddScoped<IRoomAvailabilityService, RoomAvailabilityService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "TravleCache:";
+});
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {

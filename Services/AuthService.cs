@@ -5,6 +5,7 @@ using Final_Project.DTOs;
 using Final_Project.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Final_Project.Services;
@@ -13,6 +14,7 @@ public class AuthService(
     AppDbContext context,
     IPasswordHasher<User> passwordHasher,
     IConfiguration configuration,
+    IDistributedCache cache,
     ILogger<AuthService> logger)
     : IAuthService
 {
@@ -62,17 +64,18 @@ public class AuthService(
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            
             issuer: configuration["Jwt:Issuer"],
             audience: configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddMinutes(int.Parse(configuration["Jwt:ExpiryMinutes"]?? "60")),
+            expires: DateTime.Now.AddMinutes(int.Parse(configuration["Jwt:ExpiryMinutes"] ?? "60")),
             signingCredentials: creds
         );
 
+        string jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return jwtToken;
     }
+
 
     public async Task ForgotPasswordAsync(ForgotPasswordDto dto)
     {
@@ -108,5 +111,46 @@ public class AuthService(
         user.PasswordResetTokenExpiration = null;
 
         await context.SaveChangesAsync();
+    }
+
+    public async Task LogoutAsync(ClaimsPrincipal User)
+    {
+        try
+        {
+            var jwtId = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value ?? throw new InvalidOperationException("JWT ID not found in claims.");
+           
+            if (string.IsNullOrEmpty(jwtId))
+            {
+                logger.LogWarning("JWT ID not found in claims.");
+                return;
+            }
+
+            logger.LogInformation("Logging out user with JWT ID: {JwtID}", jwtId);
+           await SaveJwtTokenToCache(jwtId ); // Invalidate the token by saving an empty string
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error during logout: {Message}", e.Message);
+            throw;
+        }
+    }
+
+    private async Task SaveJwtTokenToCache(string jwtId)
+    {
+        if (string.IsNullOrEmpty(jwtId) )
+        {
+            logger.LogWarning("JWT ID or token is null or empty. Cannot save to cache.");
+            return;
+        }
+
+        string cacheKey = "JwtID_" + jwtId;
+        await cache.SetStringAsync(
+            cacheKey,
+            "blacklisted",
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24) // Set expiration time
+            }
+        );
     }
 }
