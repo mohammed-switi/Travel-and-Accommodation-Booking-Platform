@@ -33,6 +33,78 @@ public class HotelController(IHotelService hotelService): ControllerBase
     
             return Ok(details);
         }
+       
+        
+     
         
         
+    [HttpPost]
+    public async Task<IActionResult> CreateHotel([FromBody] HotelDto hotelDto)
+    {
+        try
+        {
+            var createdHotel = await hotelService.CreateHotelAsync(hotelDto);
+            return CreatedAtAction(nameof(GetHotelDetails), new { hotelId = createdHotel.Id }, createdHotel);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateHotel(int id, [FromBody] HotelDto hotelDto)
+    {
+        try
+        {
+            var updatedHotel = await hotelService.UpdateHotelAsync(id, hotelDto);
+            return Ok(updatedHotel);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteHotel(int id)
+    {
+        try
+        {
+            var success = await hotelService.DeleteHotelAsync(id);
+            return success ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetHotels([FromQuery] bool includeInactive = false)
+    {
+        try
+        {
+            var hotels = await hotelService.GetHotelsAsync(includeInactive);
+            return hotels.Count > 0 ? Ok(hotels) : NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "An error occurred while retrieving hotels.", Details = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetHotelById(int id)
+    {
+        try
+        {
+            var hotel = await hotelService.GetHotelByIdAsync(id);
+            return hotel != null ? Ok(hotel) : NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "An error occurred while retrieving the hotel.", Details = ex.Message });
+        }
+    }
 }
