@@ -17,7 +17,7 @@ public class HomeController(IHomeService homeService) : ControllerBase
         return Ok(deals);
     }
 
-    [Authorize]
+    
     [HttpGet("recently-viewed")]
     public async Task<IActionResult> GetRecentlyViewedHotels()
     {
