@@ -54,7 +54,7 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IRoomAvailabilityService, RoomAvailabilityService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
-
+builder.Services.AddScoped<ICityService, CityService>();
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -81,6 +81,7 @@ builder.Services.AddAuthentication("Bearer")
 builder.Services.AddAuthorization();
 builder.Host.UseSerilog((context, services, configuration) =>
 {
+    
     configuration.ReadFrom.Configuration(context.Configuration);
 });
 var app = builder.Build();
