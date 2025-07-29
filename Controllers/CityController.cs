@@ -1,10 +1,12 @@
 using Final_Project.DTOs;
 using Final_Project.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Final_Project.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class CityController(ICityService cityService) : ControllerBase
 {
