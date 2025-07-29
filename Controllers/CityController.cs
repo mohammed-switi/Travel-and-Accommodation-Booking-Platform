@@ -7,7 +7,7 @@ namespace Final_Project.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 public class CityController(ICityService cityService) : ControllerBase
 {
     
