@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using ILogger = Serilog.ILogger;
 
@@ -13,9 +14,10 @@ public class JwtBlacklistMiddleware(
     public async Task InvokeAsync(HttpContext context)
     {
         ClaimsPrincipal user = context.User;
-
-        // If user is authenticated
-        if (user?.Identity?.IsAuthenticated == true)
+        var endpoint = context.GetEndpoint();
+        bool isProtectedEndpoint = endpoint?.Metadata?.GetMetadata<AuthorizeAttribute>() != null;
+        
+        if (isProtectedEndpoint && user?.Identity?.IsAuthenticated == true)
         {
             string? jti = user.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
 
