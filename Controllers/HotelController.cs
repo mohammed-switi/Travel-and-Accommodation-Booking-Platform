@@ -33,4 +33,6 @@ public class HotelController(IHotelService hotelService): ControllerBase
     
             return Ok(details);
         }
+        
+        
 }

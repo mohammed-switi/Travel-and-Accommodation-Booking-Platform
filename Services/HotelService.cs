@@ -84,19 +84,117 @@ public class HotelService(
         return hotel;
     }
 
-    public Task<HotelDto> CreateHotelAsync(HotelDto hotelDto)
+    public async Task<HotelDto> CreateHotelAsync(HotelDto hotelDto)
     {
-        throw new NotImplementedException();
+        var city = await context.Cities.FirstOrDefaultAsync(c => c.Name == hotelDto.City);
+        if (city == null)
+        {
+            logger.LogError("City '{City}' not found when creating hotel.", hotelDto.City);
+            throw new ArgumentException($"City '{hotelDto.City}' not found.");
+        }
+
+        // Optionally check if MainImage exists if provided
+        HotelImage mainImage = null;
+        if (!string.IsNullOrEmpty(hotelDto.ImageUrl))
+        {
+            mainImage = await context.HotelImages.FirstOrDefaultAsync(i => i.Url == hotelDto.ImageUrl);
+            if (mainImage == null)
+            {
+                logger.LogError("Main image URL '{ImageUrl}' not found.", hotelDto.ImageUrl);
+                throw new ArgumentException($"Main image URL '{hotelDto.ImageUrl}' not found.");
+            }
+        }
+
+        var hotel = new Hotel
+        {
+            Name = hotelDto.Name,
+            Description = hotelDto.Description,
+            StarRating = (int)hotelDto.StarRating,
+            Location = hotelDto.Location,
+            CityId = city.Id,
+            MainImageId = mainImage?.Id,
+            IsActive = hotelDto.IsActive,
+            Amenities = hotelDto.Amenities,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Hotels.Add(hotel);
+        await context.SaveChangesAsync();
+
+        hotelDto.Id = hotel.Id;
+        hotelDto.City = city.Name;
+        hotelDto.CreatedAt = hotel.CreatedAt;
+        hotelDto.UpdatedAt = hotel.UpdatedAt;
+        return hotelDto;
     }
 
-    public Task<HotelDto> UpdateHotelAsync(int id, HotelDto hotelDto)
+    public async Task<HotelDto> UpdateHotelAsync(int id, HotelDto hotelDto)
     {
-        throw new NotImplementedException();
+        var hotel = await context.Hotels.Include(h => h.City).FirstOrDefaultAsync(h => h.Id == id);
+        if (hotel == null)
+        {
+            logger.LogError("Hotel with ID {HotelId} not found for update.", id);
+            throw new ArgumentException($"Hotel with ID {id} not found.");
+        }
+
+        var city = await context.Cities.FirstOrDefaultAsync(c => c.Name == hotelDto.City);
+        if (city == null)
+        {
+            logger.LogError("City '{City}' not found when updating hotel.", hotelDto.City);
+            throw new ArgumentException($"City '{hotelDto.City}' not found.");
+        }
+
+        HotelImage mainImage = null;
+        if (!string.IsNullOrEmpty(hotelDto.ImageUrl))
+        {
+            mainImage = await context.HotelImages.FirstOrDefaultAsync(i => i.Url == hotelDto.ImageUrl);
+            if (mainImage == null)
+            {
+                logger.LogError("Main image URL '{ImageUrl}' not found.", hotelDto.ImageUrl);
+                throw new ArgumentException($"Main image URL '{hotelDto.ImageUrl}' not found.");
+            }
+        }
+
+        hotel.Name = hotelDto.Name;
+        hotel.Description = hotelDto.Description;
+        hotel.StarRating = (int)hotelDto.StarRating;
+        hotel.Location = hotelDto.Location;
+        hotel.CityId = city.Id;
+        hotel.MainImageId = mainImage?.Id;
+        hotel.IsActive = hotelDto.IsActive;
+        hotel.Amenities = hotelDto.Amenities;
+        hotel.UpdatedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync();
+
+        hotelDto.Id = hotel.Id;
+        hotelDto.City = city.Name;
+        hotelDto.CreatedAt = hotel.CreatedAt;
+        hotelDto.UpdatedAt = hotel.UpdatedAt;
+        return hotelDto;
     }
 
-    public Task<bool> DeleteHotelAsync(int id)
+    public async Task<bool> DeleteHotelAsync(int id)
     {
-        throw new NotImplementedException();
+        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews).FirstOrDefaultAsync(h => h.Id == id);
+        if (hotel == null)
+        {
+            logger.LogError("Hotel with ID {HotelId} not found for deletion.", id);
+            return false;
+        }
+
+        var hasActiveBookings = await context.BookingItems.AnyAsync(bi => bi.Room.HotelId == id && bi.Booking.Status != Final_Project.Enums.BookingStatus.Cancelled);
+        if (hasActiveBookings)
+        {
+            logger.LogError("Cannot delete hotel with ID {HotelId} because it has active bookings.", id);
+            throw new InvalidOperationException("Cannot delete hotel with active bookings.");
+        }
+
+        context.Reviews.RemoveRange(hotel.Reviews);
+        context.Rooms.RemoveRange(hotel.Rooms);
+        context.Hotels.Remove(hotel);
+        await context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<List<HotelSearchResultDto>> SearchHotelsAsync(SearchHotelsDto dto)
