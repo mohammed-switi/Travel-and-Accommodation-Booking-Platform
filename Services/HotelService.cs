@@ -93,7 +93,6 @@ public class HotelService(
             throw new ArgumentException($"City '{hotelDto.City}' not found.");
         }
 
-        // Optionally check if MainImage exists if provided
         HotelImage mainImage = null;
         if (!string.IsNullOrEmpty(hotelDto.ImageUrl))
         {
