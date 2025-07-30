@@ -1,4 +1,5 @@
 using System.Configuration;
+using Final_Project.Constants;
 using Final_Project.Data;
 using Final_Project.Interfaces;
 using Final_Project.Middlewares;
@@ -56,11 +57,14 @@ builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICityService, CityService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IOwnershipValidationService, OwnershipValidationService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
     options.InstanceName = "TravelCache:";
 });
+// Configure JWT authentication
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     {
@@ -74,11 +78,24 @@ builder.Services.AddAuthentication("Bearer")
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey =
                 new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                    System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? string.Empty))
+                    System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? string.Empty)),
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role // Explicitly set the role claim type
         };
     });
 
-builder.Services.AddAuthorization();
+// Configure authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdminRole", policy => 
+        policy.RequireRole(UserRoles.Admin));
+    
+    options.AddPolicy("RequireHotelOwnerRole", policy => 
+        policy.RequireRole(UserRoles.HotelOwner));
+    
+    options.AddPolicy("RequireAdminOrHotelOwner", policy => 
+        policy.RequireRole(UserRoles.Admin, UserRoles.HotelOwner));
+});
+
 builder.Host.UseSerilog((context, services, configuration) =>
 {
     

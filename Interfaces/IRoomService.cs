@@ -7,7 +7,7 @@ public interface IRoomService
 {
     Task<RoomResponseDto> GetRoomByIdAsync(int id);
     Task<List<RoomResponseDto>> GetRoomsAsync(int page, int pageSize, bool includeInactive = false);
-    Task<RoomResponseDto> CreateRoomAsync(CreateRoomRequestDto roomDto);
-    Task<RoomResponseDto> UpdateRoomAsync(int id, UpdateRoomRequestDto roomDto);
-    Task<bool> DeleteRoomAsync(int id);
+    Task<RoomResponseDto> CreateRoomAsync(CreateRoomRequestDto roomDto, int userId, string userRole);
+    Task<RoomResponseDto> UpdateRoomAsync(int id, UpdateRoomRequestDto roomDto, int userId, string userRole);
+    Task<bool> DeleteRoomAsync(int id, int userId, string userRole);
 }
