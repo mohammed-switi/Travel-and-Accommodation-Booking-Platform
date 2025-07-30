@@ -81,11 +81,11 @@ public class HotelController(IHotelService hotelService): ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetHotels([FromQuery] bool includeInactive = false)
+    public async Task<IActionResult> GetHotels([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeInactive = false)
     {
         try
         {
-            var hotels = await hotelService.GetHotelsAsync(includeInactive);
+            var hotels = await hotelService.GetHotelsAsync(page, pageSize, includeInactive);
             return hotels.Count > 0 ? Ok(hotels) : NoContent();
         }
         catch (Exception ex)
