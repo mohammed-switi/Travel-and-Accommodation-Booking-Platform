@@ -12,10 +12,10 @@ public class CityController(ICityService cityService) : ControllerBase
 {
     
     [HttpGet]
-    public async Task<IActionResult> GetCities()
+    public async Task<IActionResult> GetCities([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var cities = await cityService.GetCitiesAsync();
-        return Ok(cities);
+        var cities = await cityService.GetCitiesAsync(page, pageSize);
+        return cities.Count > 0 ? Ok(cities) : NoContent();
     }
 
     [HttpGet("{id}")]
