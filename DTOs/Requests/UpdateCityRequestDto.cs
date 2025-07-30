@@ -1,16 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Final_Project.DTOs;
+namespace Final_Project.DTOs.Requests;
 
-public class CityDto
+public class UpdateCityRequestDto
 {
-    public int Id { get; set; }
     [Required]
     public string Name { get; set; }
+
     [Required]
     public string Country { get; set; }
+
     public string PostOffice { get; set; }
-    
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 }

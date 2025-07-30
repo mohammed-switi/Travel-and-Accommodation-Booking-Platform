@@ -1,6 +1,6 @@
-namespace Final_Project.DTOs;
+namespace Final_Project.DTOs.Responses;
 
-public class RoomDto
+public class RoomResponseDto
 {
     public int Id { get; set; }
     public string RoomType { get; set; }
