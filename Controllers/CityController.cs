@@ -1,4 +1,6 @@
 using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +31,7 @@ public class CityController(ICityService cityService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateCity([FromBody] CityDto cityDto)
+    public async Task<IActionResult> CreateCity([FromBody] CreateCityRequestDto cityDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -39,7 +41,7 @@ public class CityController(ICityService cityService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCity(int id, [FromBody] CityDto cityDto)
+    public async Task<IActionResult> UpdateCity(int id, [FromBody] UpdateCityRequestDto cityDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);

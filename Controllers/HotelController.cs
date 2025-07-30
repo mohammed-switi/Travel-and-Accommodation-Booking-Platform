@@ -1,4 +1,6 @@
 using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,12 +41,12 @@ public class HotelController(IHotelService hotelService): ControllerBase
         
         
     [HttpPost]
-    public async Task<IActionResult> CreateHotel([FromBody] HotelDto hotelDto)
+    public async Task<IActionResult> CreateHotel([FromBody] CreateHotelRequestDto hotelDto)
     {
         try
         {
             var createdHotel = await hotelService.CreateHotelAsync(hotelDto);
-            return CreatedAtAction(nameof(GetHotelDetails), new { hotelId = createdHotel.Id }, createdHotel);
+            return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.Id }, createdHotel);
         }
         catch (ArgumentException ex)
         {
@@ -53,7 +55,7 @@ public class HotelController(IHotelService hotelService): ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateHotel(int id, [FromBody] HotelDto hotelDto)
+    public async Task<IActionResult> UpdateHotel(int id, [FromBody] UpdateHotelRequestDto hotelDto)
     {
         try
         {

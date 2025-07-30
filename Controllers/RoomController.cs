@@ -1,4 +1,6 @@
 using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
 using Final_Project.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +27,7 @@ public class RoomController(IRoomService roomService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateRoom([FromBody] RoomDto roomDto)
+    public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequestDto roomDto)
     {
         try
         {
@@ -39,7 +41,7 @@ public class RoomController(IRoomService roomService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateRoom(int id, [FromBody] RoomDto roomDto)
+    public async Task<IActionResult> UpdateRoom(int id, [FromBody] UpdateRoomRequestDto roomDto)
     {
         try
         {
