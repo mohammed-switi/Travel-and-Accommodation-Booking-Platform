@@ -19,7 +19,7 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
                 .OrderByDescending(h => h.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)))
                 .ThenByDescending(h => h.StarRating)
                 .Take(5) // Take top 5 hotels
-                .Select(h => new FeaturedHotelDto 
+                .Select(h => new FeaturedHotelDto
                 {
                     Id = h.Id,
                     Name = h.Name,
@@ -27,21 +27,11 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
                     Location = h.Location,
                     Description = h.Description,
                     ImageUrls = h.Images.Select(i => i.Url).ToList(),
-                    DiscountedPrice = h.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)),
-                    Reviews = h.Reviews.Select(r => new ReviewDto
-                    {
-                        UserName = r.User.FullName,
-                        Rating = r.Rating,
-                        Comment = r.Comment,
-                        CreatedAt = r.CreatedAt
-                    }).ToList()
+                    DiscountedPrice = h.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100))
                 })
                 .ToListAsync();
 
-            if (!featuredDeals.Any())
-            {
-                logger.LogInformation("No featured deals available.");
-            }
+            if (!featuredDeals.Any()) logger.LogInformation("No featured deals available.");
 
             return featuredDeals;
         }
@@ -75,26 +65,15 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
                     Location = rv.Hotel.Location,
                     Description = rv.Hotel.Description,
                     ImageUrls = rv.Hotel.Images.Select(i => i.Url).ToList(),
-                    DiscountedPrice = rv.Hotel.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)),
-                    Reviews = rv.Hotel.Reviews.Select(r => new ReviewDto
-                    {
-                        UserName = r.User.FullName,
-                        Rating = r.Rating,
-                        Comment = r.Comment,
-                        CreatedAt = r.CreatedAt
-                    }).ToList()
+                    DiscountedPrice = rv.Hotel.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100))
                 })
                 .ToListAsync();
 
             if (!recentlyViewedHotels.Any())
-            {
                 logger.LogInformation($"No recently viewed hotels found for user {userId}.");
-            }
             else
-            {
                 logger.LogInformation(
                     $"Retrieved {recentlyViewedHotels.Count} recently viewed hotels for user {userId}.");
-            }
 
             return recentlyViewedHotels;
         }
@@ -119,22 +98,18 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
                 .OrderByDescending(g => g.Count)
                 .Take(5)
                 .Select(c => new TrendingCityDto
-                            {
-                                CityId = c.City.Id,
-                                City = c.City.Name,
-                                BookingCount = c.Count
-                            })
+                {
+                    CityId = c.City.Id,
+                    City = c.City.Name,
+                    BookingCount = c.Count
+                })
                 .ToListAsync();
 
 
             if (!trendingCities.Any())
-            {
                 logger.LogInformation("No trending destinations available.");
-            }
             else
-            {
                 logger.LogInformation($"Retrieved {trendingCities.Count} trending destinations.");
-            }
 
             return trendingCities;
         }

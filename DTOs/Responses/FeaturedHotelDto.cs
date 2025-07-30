@@ -9,5 +9,5 @@ public class FeaturedHotelDto
     public string? Description { get; set; }
     public required List<string> ImageUrls { get; set; }
     public decimal DiscountedPrice { get; set; }
-    public List<ReviewDto>? Reviews { get; set; }
+    
 }
