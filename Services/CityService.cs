@@ -6,12 +6,14 @@ namespace Final_Project.Services;
 
 public class CityService(AppDbContext context, ILogger<CityService> logger) : ICityService
 {
-  public async Task<List<CityDto>> GetCitiesAsync()
+  public async Task<List<CityDto>> GetCitiesAsync(int page, int pageSize)
 {
     try
     {
         var cities = await context.Cities
             .AsNoTracking()
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(city => new CityDto
             {
                 Id = city.Id,
