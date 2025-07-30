@@ -1,6 +1,7 @@
 using Final_Project.DTOs;
 using Final_Project.DTOs.Requests;
 using Final_Project.DTOs.Responses;
+using Final_Project.Interfaces;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,11 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Final_Project.Controllers;
 
 [ApiController]
-[Authorize]
-[Route("api/hotels/[controller]")]
-public class HotelController(IHotelService hotelService): ControllerBase
+[Route("api/hotels")]
+public class HotelController(IHotelService hotelService, IJwtService jwtService, ILogger<HotelController> logger): ControllerBase
 {
     [HttpPost("search")]
+    [Authorize] 
     public async Task<IActionResult> SearchHotels([FromBody] SearchHotelsDto dto)
     {
         try
@@ -26,63 +27,97 @@ public class HotelController(IHotelService hotelService): ControllerBase
         }
     }
     
-     [HttpGet("{hotelId}")]
-        public async Task<IActionResult> GetHotelDetails(int hotelId, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut)
-        {
-            var details = await hotelService.GetHotelDetailsAsync(hotelId, checkIn, checkOut);
-    
-            if (details == null) return NotFound();
-    
-            return Ok(details);
-        }
+    [HttpGet("{hotelId}")]
+    [Authorize] // Any authenticated user can get hotel details
+    public async Task<IActionResult> GetHotelDetails(int hotelId, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut)
+    {
+        var details = await hotelService.GetHotelDetailsAsync(hotelId, checkIn, checkOut);
+
+        if (details == null) return NotFound();
+
+        return Ok(details);
+    }
        
-        
-     
-        
-        
     [HttpPost]
+    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can create hotels
     public async Task<IActionResult> CreateHotel([FromBody] CreateHotelRequestDto hotelDto)
     {
         try
         {
-            var createdHotel = await hotelService.CreateHotelAsync(hotelDto);
+            var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
+            
+            var createdHotel = await hotelService.CreateHotelAsync(hotelDto, userId, userRole);
             return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.Id }, createdHotel);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid();
         }
         catch (ArgumentException ex)
         {
             return BadRequest(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating hotel");
+            return StatusCode(500, new { Message = "An error occurred while creating the hotel." });
         }
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "RequireAdminOrHotelOwner")] 
     public async Task<IActionResult> UpdateHotel(int id, [FromBody] UpdateHotelRequestDto hotelDto)
     {
         try
         {
-            var updatedHotel = await hotelService.UpdateHotelAsync(id, hotelDto);
+            var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
+            
+            var updatedHotel = await hotelService.UpdateHotelAsync(id, hotelDto, userId, userRole);
             return Ok(updatedHotel);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (ArgumentException ex)
         {
             return BadRequest(new { Message = ex.Message });
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating hotel");
+            return StatusCode(500, new { Message = "An error occurred while updating the hotel." });
+        }
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "RequireAdminOrHotelOwner")] 
     public async Task<IActionResult> DeleteHotel(int id)
     {
         try
         {
-            var success = await hotelService.DeleteHotelAsync(id);
+            var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
+            
+            var success = await hotelService.DeleteHotelAsync(id, userId, userRole);
             return success ? NoContent() : NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { Message = ex.Message });
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error deleting hotel");
+            return StatusCode(500, new { Message = "An error occurred while deleting the hotel." });
+        }
     }
 
     [HttpGet]
+    [Authorize] 
     public async Task<IActionResult> GetHotels([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeInactive = false)
     {
         try
@@ -97,6 +132,7 @@ public class HotelController(IHotelService hotelService): ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize] 
     public async Task<IActionResult> GetHotelById(int id)
     {
         try
