@@ -4,7 +4,7 @@ namespace Final_Project.Services;
 
 public interface IHotelService
 {
-    Task<List<HotelDto>> GetHotelsAsync(bool includeInactive = false);
+    Task<List<HotelDto>> GetHotelsAsync(int page, int pageSize, bool includeInactive = false);
     Task<HotelDto> GetHotelByIdAsync(int id);
     Task<HotelDto> CreateHotelAsync(HotelDto hotelDto);
     Task<HotelDto> UpdateHotelAsync(int id, HotelDto hotelDto);
