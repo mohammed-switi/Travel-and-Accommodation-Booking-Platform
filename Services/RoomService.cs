@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
 
-public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IRoomService
+public class RoomService(AppDbContext context, IOwnershipValidationService ownershipValidationService, ILogger<RoomService> logger) : IRoomService
 {
     public async Task<RoomResponseDto> GetRoomByIdAsync(int id)
     {
@@ -46,13 +46,20 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         return rooms;
     }
 
-    public async Task<RoomResponseDto> CreateRoomAsync(CreateRoomRequestDto roomDto)
+    public async Task<RoomResponseDto> CreateRoomAsync(CreateRoomRequestDto roomDto, int userId, string userRole)
     {
         var hotel = await context.Hotels.FirstOrDefaultAsync(h => h.Id == roomDto.HotelId);
         if (hotel == null)
         {
             logger.LogError("Hotel with ID {HotelId} not found when creating room.", roomDto.HotelId);
             throw new ArgumentException($"Hotel with ID {roomDto.HotelId} not found.");
+        }
+
+        // Check if user can manage this hotel (and therefore create rooms in it)
+        if (!await ownershipValidationService.CanUserManageHotelAsync(userId, userRole, roomDto.HotelId))
+        {
+            logger.LogWarning("User {UserId} with role {UserRole} attempted to create room in hotel {HotelId} without permission", userId, userRole, roomDto.HotelId);
+            throw new UnauthorizedAccessException("You don't have permission to create rooms in this hotel.");
         }
 
         var room = new Room
@@ -79,13 +86,20 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         };
     }
 
-    public async Task<RoomResponseDto> UpdateRoomAsync(int id, UpdateRoomRequestDto roomDto)
+    public async Task<RoomResponseDto> UpdateRoomAsync(int id, UpdateRoomRequestDto roomDto, int userId, string userRole)
     {
         var room = await context.Rooms.FirstOrDefaultAsync(r => r.Id == id);
         if (room == null)
         {
             logger.LogError("Room with ID {RoomId} not found for update.", id);
             throw new ArgumentException($"Room with ID {id} not found.");
+        }
+
+        // Check if user can manage this room
+        if (!await ownershipValidationService.CanUserManageRoomAsync(userId, userRole, id))
+        {
+            logger.LogWarning("User {UserId} with role {UserRole} attempted to update room {RoomId} without permission", userId, userRole, id);
+            throw new UnauthorizedAccessException("You don't have permission to update this room.");
         }
 
         room.Type = Enum.Parse<RoomType>(roomDto.RoomType);
@@ -107,13 +121,20 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         };
     }
 
-    public async Task<bool> DeleteRoomAsync(int id)
+    public async Task<bool> DeleteRoomAsync(int id, int userId, string userRole)
     {
         var room = await context.Rooms.Include(r => r.BookingItems).FirstOrDefaultAsync(r => r.Id == id);
         if (room == null)
         {
             logger.LogError("Room with ID {RoomId} not found for deletion.", id);
             return false;
+        }
+
+        // Check if user can manage this room
+        if (!await ownershipValidationService.CanUserManageRoomAsync(userId, userRole, id))
+        {
+            logger.LogWarning("User {UserId} with role {UserRole} attempted to delete room {RoomId} without permission", userId, userRole, id);
+            throw new UnauthorizedAccessException("You don't have permission to delete this room.");
         }
 
         var hasActiveBookings = await context.BookingItems.AnyAsync(bi => bi.RoomId == id && bi.Booking.Status != Final_Project.Enums.BookingStatus.Cancelled);

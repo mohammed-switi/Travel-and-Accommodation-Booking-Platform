@@ -8,8 +8,8 @@ using Final_Project.DTOs;
 namespace Final_Project.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
+    [Route("api/bookings")]
+    [Authorize] // Base authorization for all booking endpoints
     public class BookingController(IBookingService bookingService, ILogger<BookingController> logger)
         : ControllerBase
     {

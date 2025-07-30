@@ -2,13 +2,18 @@ using Final_Project.Data;
 using Final_Project.DTOs;
 using Final_Project.DTOs.Requests;
 using Final_Project.DTOs.Responses;
-using Final_Project.Enums;
+using Final_Project.Interfaces;
 using Final_Project.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Final_Project.Enums;
 
 namespace Final_Project.Services;
 
-public class HotelService(AppDbContext context, ILogger<HotelService> logger) : IHotelService
+public class HotelService(
+    AppDbContext context,
+    IOwnershipValidationService ownershipValidationService,
+    ILogger<HotelService> logger) : IHotelService
 {
     public async Task<List<HotelResponseDto>> GetHotelsAsync(int page, int pageSize, bool includeInactive = false)
     {
@@ -85,7 +90,7 @@ public class HotelService(AppDbContext context, ILogger<HotelService> logger) : 
         return hotel ?? throw new InvalidOperationException("Hotel not found.");
     }
 
-    public async Task<HotelResponseDto> CreateHotelAsync(CreateHotelRequestDto hotelDto)
+    public async Task<HotelResponseDto> CreateHotelAsync(CreateHotelRequestDto hotelDto, int userId, string userRole)
     {
         var city = await context.Cities.FirstOrDefaultAsync(c => c.Name == hotelDto.City);
         if (city == null)
@@ -114,7 +119,8 @@ public class HotelService(AppDbContext context, ILogger<HotelService> logger) : 
             CityId = city.Id,
             MainImageId = mainImage?.Id,
             Amenities = hotelDto.Amenities,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            OwnerId = userRole == Constants.UserRoles.HotelOwner ? userId : null // Set owner if hotel owner
         };
 
         context.Hotels.Add(hotel);
@@ -143,19 +149,26 @@ public class HotelService(AppDbContext context, ILogger<HotelService> logger) : 
         };
     }
 
-    public async Task<HotelResponseDto> UpdateHotelAsync(int id, UpdateHotelRequestDto hotelDto)
+    public async Task<HotelResponseDto> UpdateHotelAsync(int id, UpdateHotelRequestDto hotelDto, int userId, string userRole)
     {
         var hotel = await context.Hotels
             .Include(h => h.City)
             .Include(h => h.Images)
             .Include(h => h.Reviews)
-            .ThenInclude(r => r.User)
+                .ThenInclude(r => r.User)
             .FirstOrDefaultAsync(h => h.Id == id);
 
         if (hotel == null)
         {
             logger.LogError("Hotel with ID {HotelId} not found for update.", id);
             throw new ArgumentException($"Hotel with ID {id} not found.");
+        }
+
+        // Check if user can manage this hotel
+        if (!await ownershipValidationService.CanUserManageHotelAsync(userId, userRole, id))
+        {
+            logger.LogWarning("User {UserId} with role {UserRole} attempted to update hotel {HotelId} without permission", userId, userRole, id);
+            throw new UnauthorizedAccessException("You don't have permission to update this hotel.");
         }
 
         var city = await context.Cities.FirstOrDefaultAsync(c => c.Name == hotelDto.City);
@@ -210,14 +223,20 @@ public class HotelService(AppDbContext context, ILogger<HotelService> logger) : 
         };
     }
 
-    public async Task<bool> DeleteHotelAsync(int id)
+    public async Task<bool> DeleteHotelAsync(int id, int userId, string userRole)
     {
-        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews)
-            .FirstOrDefaultAsync(h => h.Id == id);
+        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews).FirstOrDefaultAsync(h => h.Id == id);
         if (hotel == null)
         {
             logger.LogError("Hotel with ID {HotelId} not found for deletion.", id);
             return false;
+        }
+
+        // Check if user can manage this hotel
+        if (!await ownershipValidationService.CanUserManageHotelAsync(userId, userRole, id))
+        {
+            logger.LogWarning("User {UserId} with role {UserRole} attempted to delete hotel {HotelId} without permission", userId, userRole, id);
+            throw new UnauthorizedAccessException("You don't have permission to delete this hotel.");
         }
 
         var hasActiveBookings = await context.BookingItems.AnyAsync(bi =>
@@ -254,7 +273,7 @@ public class HotelService(AppDbContext context, ILogger<HotelService> logger) : 
         var hotel = await context.Hotels
             .Include(h => h.Images)
             .Include(h => h.Reviews)
-            .ThenInclude(r => r.User)
+                .ThenInclude(r => r.User)
             .Include(h => h.Rooms).Include(hotel => hotel.City)
             .FirstOrDefaultAsync(h => h.Id == hotelId && h.IsActive);
 

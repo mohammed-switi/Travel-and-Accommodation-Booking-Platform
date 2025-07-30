@@ -7,8 +7,8 @@ using Final_Project.Services;
 namespace Final_Project.Controllers;
 
 [ApiController]
-[Authorize]
-[Route("api/home/[controller]")]
+[Authorize] // All home page endpoints require authentication
+[Route("api/home")]
 public class HomeController(IHomeService homeService) : ControllerBase
 {
     [HttpGet("featured-deals")]
