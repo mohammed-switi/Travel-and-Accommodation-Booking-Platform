@@ -1,12 +1,13 @@
-using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
 
 namespace Final_Project.Services;
 
 public interface ICityService
 {
-    Task<List<CityDto>> GetCitiesAsync(int page, int pageSize);
-    Task<CityDto?> GetCityByIdAsync(int id);
-    Task<CityDto> CreateCityAsync(CityDto cityDto);
-    Task<CityDto> UpdateCityAsync(int id, CityDto cityDto);
+    Task<List<CityResponseDto>> GetCitiesAsync(int page, int pageSize);
+    Task<CityResponseDto?> GetCityByIdAsync(int id);
+    Task<CityResponseDto> CreateCityAsync(CreateCityRequestDto cityDto);
+    Task<CityResponseDto> UpdateCityAsync(int id, UpdateCityRequestDto cityDto);
     Task<bool> DeleteCityAsync(int id);
 }
