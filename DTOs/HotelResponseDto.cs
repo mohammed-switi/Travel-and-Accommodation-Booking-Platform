@@ -1,3 +1,4 @@
+using Final_Project.DTOs.Responses;
 using Final_Project.Enums;
 using Final_Project.Models;
 
@@ -9,6 +10,7 @@ public class HotelResponseDto
     public required string Name { get; set; }
     public required string City { get; set; }
     public required string Location { get; set; }
+    public List<RoomResponseDto>? Rooms { get; set; }
     public required string Description { get; set; }
     public double StarRating { get; set; }
     public string? ImageUrl { get; set; }

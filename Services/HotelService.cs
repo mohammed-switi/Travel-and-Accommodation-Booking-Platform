@@ -1,17 +1,16 @@
 using Final_Project.Data;
 using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
+using Final_Project.Enums;
 using Final_Project.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
 
-public class HotelService(
-    AppDbContext context,
-    IImageService imageService,
-    IRoomAvailabilityService roomAvailabilityService,
-    ILogger<HotelService> logger) : IHotelService
+public class HotelService(AppDbContext context, ILogger<HotelService> logger) : IHotelService
 {
-    public async Task<List<HotelDto>> GetHotelsAsync(int page, int pageSize, bool includeInactive = false)
+    public async Task<List<HotelResponseDto>> GetHotelsAsync(int page, int pageSize, bool includeInactive = false)
     {
         try
         {
@@ -19,11 +18,12 @@ public class HotelService(
                 .Where(h => includeInactive || h.IsActive)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(h => new HotelDto
+                .Select(h => new HotelResponseDto
                 {
                     Id = h.Id,
                     Name = h.Name,
                     StarRating = h.StarRating,
+                    City = h.City.Name,
                     Location = h.City.Name,
                     Description = h.Description,
                     ImageUrl = h.MainImage.Url,
@@ -36,7 +36,6 @@ public class HotelService(
                         Comment = r.Comment,
                         CreatedAt = r.CreatedAt
                     }).ToList(),
-                    IsActive = h.IsActive,
                     CreatedAt = h.CreatedAt,
                     UpdatedAt = h.UpdatedAt
                 })
@@ -53,15 +52,16 @@ public class HotelService(
         }
     }
 
-    public async Task<HotelDto> GetHotelByIdAsync(int id)
+    public async Task<HotelResponseDto> GetHotelByIdAsync(int id)
     {
         var hotel = await context.Hotels
             .Where(h => h.Id == id && h.IsActive)
-            .Select(hl => new HotelDto
+            .Select(hl => new HotelResponseDto
             {
                 Id = hl.Id,
                 Name = hl.Name,
                 StarRating = hl.StarRating,
+                City = hl.City.Name,
                 Location = hl.City.Name,
                 Description = hl.Description,
                 ImageUrl = hl.MainImage.Url,
@@ -74,7 +74,6 @@ public class HotelService(
                     Comment = r.Comment,
                     CreatedAt = r.CreatedAt
                 }).ToList(),
-                IsActive = hl.IsActive,
                 CreatedAt = hl.CreatedAt,
                 UpdatedAt = hl.UpdatedAt
             })
@@ -83,10 +82,10 @@ public class HotelService(
 
         if (ReferenceEquals(hotel, null)) logger.LogWarning("Hotel with ID {HotelId} not found.", id);
 
-        return hotel;
+        return hotel ?? throw new InvalidOperationException("Hotel not found.");
     }
 
-    public async Task<HotelDto> CreateHotelAsync(HotelDto hotelDto)
+    public async Task<HotelResponseDto> CreateHotelAsync(CreateHotelRequestDto hotelDto)
     {
         var city = await context.Cities.FirstOrDefaultAsync(c => c.Name == hotelDto.City);
         if (city == null)
@@ -95,7 +94,7 @@ public class HotelService(
             throw new ArgumentException($"City '{hotelDto.City}' not found.");
         }
 
-        HotelImage mainImage = null;
+        HotelImage? mainImage = null;
         if (!string.IsNullOrEmpty(hotelDto.ImageUrl))
         {
             mainImage = await context.HotelImages.FirstOrDefaultAsync(i => i.Url == hotelDto.ImageUrl);
@@ -114,7 +113,6 @@ public class HotelService(
             Location = hotelDto.Location,
             CityId = city.Id,
             MainImageId = mainImage?.Id,
-            IsActive = hotelDto.IsActive,
             Amenities = hotelDto.Amenities,
             CreatedAt = DateTime.UtcNow
         };
@@ -122,16 +120,38 @@ public class HotelService(
         context.Hotels.Add(hotel);
         await context.SaveChangesAsync();
 
-        hotelDto.Id = hotel.Id;
-        hotelDto.City = city.Name;
-        hotelDto.CreatedAt = hotel.CreatedAt;
-        hotelDto.UpdatedAt = hotel.UpdatedAt;
-        return hotelDto;
+        return new HotelResponseDto
+        {
+            Id = hotel.Id,
+            Name = hotel.Name,
+            City = city.Name,
+            Location = hotel.Location,
+            Description = hotel.Description,
+            StarRating = hotel.StarRating,
+            ImageUrl = mainImage?.Url,
+            Images = hotel.Images.Select(i => i.Url).ToList(),
+            Reviews = hotel.Reviews.Select(r => new ReviewDto
+            {
+                UserName = r.User.FullName,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt
+            }).ToList(),
+            CreatedAt = hotel.CreatedAt,
+            UpdatedAt = hotel.UpdatedAt,
+            Amenities = hotel.Amenities
+        };
     }
 
-    public async Task<HotelDto> UpdateHotelAsync(int id, HotelDto hotelDto)
+    public async Task<HotelResponseDto> UpdateHotelAsync(int id, UpdateHotelRequestDto hotelDto)
     {
-        var hotel = await context.Hotels.Include(h => h.City).FirstOrDefaultAsync(h => h.Id == id);
+        var hotel = await context.Hotels
+            .Include(h => h.City)
+            .Include(h => h.Images)
+            .Include(h => h.Reviews)
+            .ThenInclude(r => r.User)
+            .FirstOrDefaultAsync(h => h.Id == id);
+
         if (hotel == null)
         {
             logger.LogError("Hotel with ID {HotelId} not found for update.", id);
@@ -145,7 +165,7 @@ public class HotelService(
             throw new ArgumentException($"City '{hotelDto.City}' not found.");
         }
 
-        HotelImage mainImage = null;
+        HotelImage? mainImage = null;
         if (!string.IsNullOrEmpty(hotelDto.ImageUrl))
         {
             mainImage = await context.HotelImages.FirstOrDefaultAsync(i => i.Url == hotelDto.ImageUrl);
@@ -162,29 +182,46 @@ public class HotelService(
         hotel.Location = hotelDto.Location;
         hotel.CityId = city.Id;
         hotel.MainImageId = mainImage?.Id;
-        hotel.IsActive = hotelDto.IsActive;
         hotel.Amenities = hotelDto.Amenities;
         hotel.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync();
 
-        hotelDto.Id = hotel.Id;
-        hotelDto.City = city.Name;
-        hotelDto.CreatedAt = hotel.CreatedAt;
-        hotelDto.UpdatedAt = hotel.UpdatedAt;
-        return hotelDto;
+        return new HotelResponseDto
+        {
+            Id = hotel.Id,
+            Name = hotel.Name,
+            City = city.Name,
+            Location = hotel.Location,
+            Description = hotel.Description,
+            StarRating = hotel.StarRating,
+            ImageUrl = mainImage?.Url,
+            Images = hotel.Images.Select(i => i.Url).ToList(),
+            Reviews = hotel.Reviews.Select(r => new ReviewDto
+            {
+                UserName = r.User.FullName,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt
+            }).ToList(),
+            CreatedAt = hotel.CreatedAt,
+            UpdatedAt = hotel.UpdatedAt,
+            Amenities = hotel.Amenities
+        };
     }
 
     public async Task<bool> DeleteHotelAsync(int id)
     {
-        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews).FirstOrDefaultAsync(h => h.Id == id);
+        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews)
+            .FirstOrDefaultAsync(h => h.Id == id);
         if (hotel == null)
         {
             logger.LogError("Hotel with ID {HotelId} not found for deletion.", id);
             return false;
         }
 
-        var hasActiveBookings = await context.BookingItems.AnyAsync(bi => bi.Room.HotelId == id && bi.Booking.Status != Final_Project.Enums.BookingStatus.Cancelled);
+        var hasActiveBookings = await context.BookingItems.AnyAsync(bi =>
+            bi.Room.HotelId == id && bi.Booking.Status != BookingStatus.Cancelled);
         if (hasActiveBookings)
         {
             logger.LogError("Cannot delete hotel with ID {HotelId} because it has active bookings.", id);
@@ -212,32 +249,46 @@ public class HotelService(
         return result;
     }
 
-    public async Task<HotelDetailsDto> GetHotelDetailsAsync(int hotelId, DateTime? checkIn, DateTime? checkOut)
+    public async Task<HotelResponseDto?> GetHotelDetailsAsync(int hotelId, DateTime? checkIn, DateTime? checkOut)
     {
         var hotel = await context.Hotels
             .Include(h => h.Images)
             .Include(h => h.Reviews)
             .ThenInclude(r => r.User)
+            .Include(h => h.Rooms).Include(hotel => hotel.City)
             .FirstOrDefaultAsync(h => h.Id == hotelId && h.IsActive);
 
-        if (hotel == null) return null;
+        if (hotel == null)
+        {
+            logger.LogWarning("Hotel with ID {HotelId} not found.", hotelId);
+            return null;
+        }
 
-        return new HotelDetailsDto
+        return new HotelResponseDto
         {
             Id = hotel.Id,
             Name = hotel.Name,
             StarRating = hotel.StarRating,
+            City = hotel.City.Name,
             Location = hotel.Location,
             Description = hotel.Description,
-            ImageUrls = imageService.GetHotelImageUrls(hotel),
-            Reviews = hotel.Reviews?.Select(r => new ReviewDto
+            Images = hotel.Images.Select(i => i.Url).ToList(),
+            Reviews = hotel.Reviews.Select(r => new ReviewDto
             {
                 UserName = r.User.FullName,
                 Rating = r.Rating,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt
             }).ToList(),
-            Rooms = await roomAvailabilityService.GetRoomAvailabilityAsync(hotelId, checkIn, checkOut)
+            Rooms = hotel.Rooms.Select(r => new RoomResponseDto
+            {
+                Id = r.Id,
+                RoomType = r.Type.ToString(),
+                Price = r.PricePerNight,
+                MaxAdults = r.MaxAdults,
+                MaxChildren = r.MaxChildren,
+                AvailableQuantity = r.Quantity
+            }).ToList()
         };
     }
 

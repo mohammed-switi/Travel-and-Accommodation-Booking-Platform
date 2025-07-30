@@ -1,5 +1,6 @@
 using System.Configuration;
 using Final_Project.Data;
+using Final_Project.Interfaces;
 using Final_Project.Middlewares;
 using Final_Project.Models;
 using Final_Project.Services;
@@ -50,12 +51,11 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
-builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IRoomAvailabilityService, RoomAvailabilityService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICityService, CityService>();
-
+builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");

@@ -1,5 +1,7 @@
 using Final_Project.Data;
 using Final_Project.DTOs;
+using Final_Project.DTOs.Responses;
+using Final_Project.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
@@ -8,7 +10,7 @@ using System.Security.Claims;
 
 public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IHomeService
 {
-    public async Task<List<HotelDto>> GetFeaturedDealsAsync()
+    public async Task<List<FeaturedHotelDto>> GetFeaturedDealsAsync()
     {
         try
         {
@@ -17,13 +19,22 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
                 .OrderByDescending(h => h.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)))
                 .ThenByDescending(h => h.StarRating)
                 .Take(5) // Take top 5 hotels
-                .Select(h => new HotelDto
+                .Select(h => new FeaturedHotelDto 
                 {
                     Id = h.Id,
                     Name = h.Name,
                     StarRating = h.StarRating,
                     Location = h.Location,
-                    Discount = h.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)),
+                    Description = h.Description,
+                    ImageUrls = h.Images.Select(i => i.Url).ToList(),
+                    DiscountedPrice = h.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)),
+                    Reviews = h.Reviews.Select(r => new ReviewDto
+                    {
+                        UserName = r.User.FullName,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt
+                    }).ToList()
                 })
                 .ToListAsync();
 
@@ -41,7 +52,7 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
         }
     }
 
-    public async Task<List<HotelDto>> GetRecentlyViewedHotelsAsync(ClaimsPrincipal user)
+    public async Task<List<FeaturedHotelDto>> GetRecentlyViewedHotelsAsync(ClaimsPrincipal user)
     {
         try
         {
@@ -49,20 +60,29 @@ public class HomeService(AppDbContext context, ILogger<HomeService> logger) : IH
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 logger.LogWarning("User ID not found or invalid in claims.");
-                return new List<HotelDto>();
+                return new List<FeaturedHotelDto>();
             }
 
             var recentlyViewedHotels = await context.RecentlyViewedHotels
                 .Where(rv => rv.UserId == userId)
                 .OrderByDescending(rv => rv.ViewedAt)
                 .Take(5)
-                .Select(rv => new HotelDto
+                .Select(rv => new FeaturedHotelDto
                 {
                     Id = rv.Hotel.Id,
                     Name = rv.Hotel.Name,
                     StarRating = rv.Hotel.StarRating,
                     Location = rv.Hotel.Location,
-                    Discount = rv.Hotel.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)),
+                    Description = rv.Hotel.Description,
+                    ImageUrls = rv.Hotel.Images.Select(i => i.Url).ToList(),
+                    DiscountedPrice = rv.Hotel.Rooms.Max(r => r.PricePerNight - r.PricePerNight * (r.Discount / 100)),
+                    Reviews = rv.Hotel.Reviews.Select(r => new ReviewDto
+                    {
+                        UserName = r.User.FullName,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt
+                    }).ToList()
                 })
                 .ToListAsync();
 

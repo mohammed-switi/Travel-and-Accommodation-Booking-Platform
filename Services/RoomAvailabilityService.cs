@@ -1,5 +1,6 @@
 using Final_Project.Data;
 using Final_Project.DTOs;
+using Final_Project.DTOs.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
@@ -8,7 +9,7 @@ namespace Final_Project.Services;
 public class RoomAvailabilityService(AppDbContext context) : IRoomAvailabilityService
 {
 
-    public async Task<List<RoomDto>> GetRoomAvailabilityAsync(int hotelId, DateTime? checkIn, DateTime? checkOut)
+    public async Task<List<RoomResponseDto>> GetRoomAvailabilityAsync(int hotelId, DateTime? checkIn, DateTime? checkOut)
     {
         var rooms = await context.Rooms.Where(r => r.HotelId == hotelId).ToListAsync();
 
@@ -23,7 +24,7 @@ public class RoomAvailabilityService(AppDbContext context) : IRoomAvailabilitySe
             return rooms.Select(room =>
             {
                 var bookedCount = overlappingBookings.Count(b => b.RoomId == room.Id);
-                return new RoomDto
+                return new RoomResponseDto 
                 {
                     Id = room.Id,
                     RoomType = room.Type.ToString(),
@@ -35,7 +36,7 @@ public class RoomAvailabilityService(AppDbContext context) : IRoomAvailabilitySe
             }).ToList();
         }
 
-        return rooms.Select(room => new RoomDto
+        return rooms.Select(room => new RoomResponseDto 
         {
             Id = room.Id,
             RoomType = room.Type.ToString(),

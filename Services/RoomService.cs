@@ -1,5 +1,6 @@
 using Final_Project.Data;
-using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
 using Final_Project.Enums;
 using Final_Project.Interfaces;
 using Final_Project.Models;
@@ -9,12 +10,12 @@ namespace Final_Project.Services;
 
 public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IRoomService
 {
-    public async Task<RoomDto> GetRoomByIdAsync(int id)
+    public async Task<RoomResponseDto> GetRoomByIdAsync(int id)
     {
         var room = await context.Rooms.Include(r => r.Hotel).FirstOrDefaultAsync(r => r.Id == id);
         if (room == null) return null;
 
-        return new RoomDto
+        return new RoomResponseDto
         {
             Id = room.Id,
             RoomType = room.Type.ToString(),
@@ -25,13 +26,13 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         };
     }
 
-    public async Task<List<RoomDto>> GetRoomsAsync(int page, int pageSize, bool includeInactive = false)
+    public async Task<List<RoomResponseDto>> GetRoomsAsync(int page, int pageSize, bool includeInactive = false)
     {
         var rooms = await context.Rooms
             .Where(r => includeInactive || r.Hotel.IsActive)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(r => new RoomDto
+            .Select(r => new RoomResponseDto 
             {
                 Id = r.Id,
                 RoomType = r.Type.ToString(),
@@ -45,13 +46,13 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         return rooms;
     }
 
-    public async Task<RoomDto> CreateRoomAsync(RoomDto roomDto)
+    public async Task<RoomResponseDto> CreateRoomAsync(CreateRoomRequestDto roomDto)
     {
-        var hotel = await context.Hotels.FirstOrDefaultAsync(h => h.Id == roomDto.Id);
+        var hotel = await context.Hotels.FirstOrDefaultAsync(h => h.Id == roomDto.HotelId);
         if (hotel == null)
         {
-            logger.LogError("Hotel with ID {HotelId} not found when creating room.", roomDto.Id);
-            throw new ArgumentException($"Hotel with ID {roomDto.Id} not found.");
+            logger.LogError("Hotel with ID {HotelId} not found when creating room.", roomDto.HotelId);
+            throw new ArgumentException($"Hotel with ID {roomDto.HotelId} not found.");
         }
 
         var room = new Room
@@ -67,11 +68,18 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         context.Rooms.Add(room);
         await context.SaveChangesAsync();
 
-        roomDto.Id = room.Id;
-        return roomDto;
+        return new RoomResponseDto
+        {
+            Id = room.Id,
+            RoomType = room.Type.ToString(),
+            Price = room.Discount,
+            MaxAdults = room.MaxAdults,
+            MaxChildren = room.MaxChildren,
+            AvailableQuantity = room.Quantity
+        };
     }
 
-    public async Task<RoomDto> UpdateRoomAsync(int id, RoomDto roomDto)
+    public async Task<RoomResponseDto> UpdateRoomAsync(int id, UpdateRoomRequestDto roomDto)
     {
         var room = await context.Rooms.FirstOrDefaultAsync(r => r.Id == id);
         if (room == null)
@@ -88,7 +96,15 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
 
         await context.SaveChangesAsync();
 
-        return roomDto;
+        return new RoomResponseDto
+        {
+            Id = room.Id,
+            RoomType = room.Type.ToString(),
+            Price = room.Discount,
+            MaxAdults = room.MaxAdults,
+            MaxChildren = room.MaxChildren,
+            AvailableQuantity = room.Quantity
+        };
     }
 
     public async Task<bool> DeleteRoomAsync(int id)

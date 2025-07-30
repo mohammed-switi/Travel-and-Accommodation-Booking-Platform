@@ -1,12 +1,14 @@
 using Final_Project.Data;
 using Final_Project.DTOs;
+using Final_Project.DTOs.Requests;
+using Final_Project.DTOs.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
 
 public class CityService(AppDbContext context, ILogger<CityService> logger) : ICityService
 {
-  public async Task<List<CityDto>> GetCitiesAsync(int page, int pageSize)
+  public async Task<List<CityResponseDto>> GetCitiesAsync(int page, int pageSize)
 {
     try
     {
@@ -14,7 +16,7 @@ public class CityService(AppDbContext context, ILogger<CityService> logger) : IC
             .AsNoTracking()
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(city => new CityDto
+            .Select(city => new CityResponseDto
             {
                 Id = city.Id,
                 Name = city.Name,
@@ -38,14 +40,14 @@ public class CityService(AppDbContext context, ILogger<CityService> logger) : IC
         throw;
     }
 }
-    public async Task<CityDto?> GetCityByIdAsync(int id)
+    public async Task<CityResponseDto?> GetCityByIdAsync(int id)
     {
         try
         {
             var city = await context.Cities
                 .AsNoTracking()
                 .Where(c => c.Id == id)
-                .Select(c => new CityDto
+                .Select(c => new CityResponseDto 
                 {
                     Id = c.Id,
                     Name = c.Name,
@@ -70,7 +72,7 @@ public class CityService(AppDbContext context, ILogger<CityService> logger) : IC
         }
     }
 
-    public async Task<CityDto> CreateCityAsync(CityDto cityDto)
+    public async Task<CityResponseDto> CreateCityAsync(CreateCityRequestDto cityDto)
     {
         if (cityDto == null)
         {
@@ -89,43 +91,45 @@ public class CityService(AppDbContext context, ILogger<CityService> logger) : IC
         context.Cities.Add(city);
         await context.SaveChangesAsync();
 
-        cityDto.CreatedAt = city.CreatedAt;
-        return await Task.FromResult(cityDto);
+        return new CityResponseDto
+        {
+            Id = city.Id,
+            Name = city.Name,
+            Country = city.Country,
+            PostOffice = city.PostOffice,
+            CreatedAt = city.CreatedAt
+        };
     }
 
-    public async Task<CityDto> UpdateCityAsync(int id, CityDto cityDto)
+    public async Task<CityResponseDto> UpdateCityAsync(int id, UpdateCityRequestDto cityDto)
     {
-        try
+        if (cityDto == null)
         {
-            if (cityDto == null)
-            {
-                throw new ArgumentNullException(nameof(cityDto), "City DTO cannot be null");
-            }
-
-            var city = context.Cities.FindAsync(id).Result;
-            if (ReferenceEquals(city, null))
-            {
-                throw new KeyNotFoundException($"City with ID {id} not found.");
-            }
-
-            city.Name = cityDto.Name;
-            city.Country = cityDto.Country;
-            city.PostOffice = cityDto.PostOffice;
-            city.UpdatedAt = DateTime.UtcNow;
-
-            await context.SaveChangesAsync();
-            
-            cityDto.Id = city.Id;
-            cityDto.CreatedAt = city.CreatedAt;
-            cityDto.UpdatedAt = city.UpdatedAt;
-
-            return await Task.FromResult(cityDto);
+            throw new ArgumentNullException(nameof(cityDto), "City DTO cannot be null");
         }
-        catch (Exception e)
+
+        var city = await context.Cities.FindAsync(id);
+        if (city == null)
         {
-            logger.LogError(e, $"An error occurred while updating city with ID {id}.");
-            throw;
+            throw new KeyNotFoundException($"City with ID {id} not found.");
         }
+
+        city.Name = cityDto.Name;
+        city.Country = cityDto.Country;
+        city.PostOffice = cityDto.PostOffice;
+        city.UpdatedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync();
+
+        return new CityResponseDto
+        {
+            Id = city.Id,
+            Name = city.Name,
+            Country = city.Country,
+            PostOffice = city.PostOffice,
+            CreatedAt = city.CreatedAt,
+            UpdatedAt = city.UpdatedAt
+        };
     }
 
     public async Task<bool> DeleteCityAsync(int id)
