@@ -58,7 +58,10 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICityService, CityService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IOwnershipValidationService, OwnershipValidationService>();
+<<<<<<< Updated upstream
 builder.Services.AddScoped<IJwtService, JwtService>();
+=======
+>>>>>>> Stashed changes
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");

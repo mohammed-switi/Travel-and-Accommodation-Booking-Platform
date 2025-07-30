@@ -5,15 +5,23 @@ using Final_Project.Interfaces;
 using Final_Project.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Final_Project.Controllers;
 
 [ApiController]
 [Route("api/hotels")]
+<<<<<<< Updated upstream
 public class HotelController(IHotelService hotelService, IJwtService jwtService, ILogger<HotelController> logger): ControllerBase
 {
     [HttpPost("search")]
     [Authorize] 
+=======
+public class HotelController(IHotelService hotelService, ILogger<HotelController> logger): ControllerBase
+{
+    [HttpPost("search")]
+    [Authorize] // Any authenticated user can search for hotels
+>>>>>>> Stashed changes
     public async Task<IActionResult> SearchHotels([FromBody] SearchHotelsDto dto)
     {
         try
@@ -44,7 +52,15 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
     {
         try
         {
+<<<<<<< Updated upstream
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
+=======
+            // Extract user information from claims
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
+                                   throw new InvalidOperationException("User ID not found in claims"));
+            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? 
+                              throw new InvalidOperationException("User role not found in claims");
+>>>>>>> Stashed changes
             
             var createdHotel = await hotelService.CreateHotelAsync(hotelDto, userId, userRole);
             return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.Id }, createdHotel);
@@ -65,12 +81,24 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
     }
 
     [HttpPut("{id}")]
+<<<<<<< Updated upstream
     [Authorize(Policy = "RequireAdminOrHotelOwner")] 
+=======
+    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can update hotels
+>>>>>>> Stashed changes
     public async Task<IActionResult> UpdateHotel(int id, [FromBody] UpdateHotelRequestDto hotelDto)
     {
         try
         {
+<<<<<<< Updated upstream
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
+=======
+            // Extract user information from claims
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
+                                   throw new InvalidOperationException("User ID not found in claims"));
+            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? 
+                              throw new InvalidOperationException("User role not found in claims");
+>>>>>>> Stashed changes
             
             var updatedHotel = await hotelService.UpdateHotelAsync(id, hotelDto, userId, userRole);
             return Ok(updatedHotel);
@@ -91,12 +119,24 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
     }
 
     [HttpDelete("{id}")]
+<<<<<<< Updated upstream
     [Authorize(Policy = "RequireAdminOrHotelOwner")] 
+=======
+    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can delete their own hotels
+>>>>>>> Stashed changes
     public async Task<IActionResult> DeleteHotel(int id)
     {
         try
         {
+<<<<<<< Updated upstream
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
+=======
+            // Extract user information from claims
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
+                                   throw new InvalidOperationException("User ID not found in claims"));
+            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? 
+                              throw new InvalidOperationException("User role not found in claims");
+>>>>>>> Stashed changes
             
             var success = await hotelService.DeleteHotelAsync(id, userId, userRole);
             return success ? NoContent() : NotFound();
@@ -117,7 +157,11 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
     }
 
     [HttpGet]
+<<<<<<< Updated upstream
     [Authorize] 
+=======
+    [Authorize] // Any authenticated user can get hotels list
+>>>>>>> Stashed changes
     public async Task<IActionResult> GetHotels([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeInactive = false)
     {
         try
@@ -132,7 +176,11 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
     }
 
     [HttpGet("{id}")]
+<<<<<<< Updated upstream
     [Authorize] 
+=======
+    [Authorize] // Any authenticated user can get a specific hotel
+>>>>>>> Stashed changes
     public async Task<IActionResult> GetHotelById(int id)
     {
         try
