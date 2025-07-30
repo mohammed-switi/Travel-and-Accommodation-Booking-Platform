@@ -7,17 +7,10 @@ namespace Final_Project.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
-<<<<<<< Updated upstream
 public class RoomController(IRoomService roomService, IJwtService jwtService, ILogger<RoomController> logger) : ControllerBase
 {
     [HttpGet]
-    [Authorize] 
-=======
-public class RoomController(IRoomService roomService) : ControllerBase
-{
-    [HttpGet]
-    [Authorize] // Any authenticated user can get rooms list
->>>>>>> Stashed changes
+    [Authorize]
     public async Task<IActionResult> GetRooms([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeInactive = false)
     {
         var rooms = await roomService.GetRoomsAsync(page, pageSize, includeInactive);
@@ -25,11 +18,7 @@ public class RoomController(IRoomService roomService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-<<<<<<< Updated upstream
     [Authorize]
-=======
-    [Authorize] // Any authenticated user can get a specific room
->>>>>>> Stashed changes
     public async Task<IActionResult> GetRoomById(int id)
     {
         var room = await roomService.GetRoomByIdAsync(id);
@@ -37,11 +26,7 @@ public class RoomController(IRoomService roomService) : ControllerBase
     }
 
     [HttpPost]
-<<<<<<< Updated upstream
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] 
-=======
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can create rooms
->>>>>>> Stashed changes
+    [Authorize(Policy = "RequireAdminOrHotelOwner")]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequestDto roomDto)
     {
         try
@@ -67,11 +52,7 @@ public class RoomController(IRoomService roomService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-<<<<<<< Updated upstream
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] 
-=======
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can update rooms
->>>>>>> Stashed changes
+    [Authorize(Policy = "RequireAdminOrHotelOwner")]
     public async Task<IActionResult> UpdateRoom(int id, [FromBody] UpdateRoomRequestDto roomDto)
     {
         try

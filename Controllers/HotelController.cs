@@ -11,17 +11,10 @@ namespace Final_Project.Controllers;
 
 [ApiController]
 [Route("api/hotels")]
-<<<<<<< Updated upstream
 public class HotelController(IHotelService hotelService, IJwtService jwtService, ILogger<HotelController> logger): ControllerBase
 {
     [HttpPost("search")]
-    [Authorize] 
-=======
-public class HotelController(IHotelService hotelService, ILogger<HotelController> logger): ControllerBase
-{
-    [HttpPost("search")]
-    [Authorize] // Any authenticated user can search for hotels
->>>>>>> Stashed changes
+    [Authorize]
     public async Task<IActionResult> SearchHotels([FromBody] SearchHotelsDto dto)
     {
         try
@@ -36,7 +29,7 @@ public class HotelController(IHotelService hotelService, ILogger<HotelController
     }
     
     [HttpGet("{hotelId}")]
-    [Authorize] // Any authenticated user can get hotel details
+    [Authorize]
     public async Task<IActionResult> GetHotelDetails(int hotelId, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut)
     {
         var details = await hotelService.GetHotelDetailsAsync(hotelId, checkIn, checkOut);
@@ -47,20 +40,12 @@ public class HotelController(IHotelService hotelService, ILogger<HotelController
     }
        
     [HttpPost]
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can create hotels
+    [Authorize(Policy = "RequireAdminOrHotelOwner")]
     public async Task<IActionResult> CreateHotel([FromBody] CreateHotelRequestDto hotelDto)
     {
         try
         {
-<<<<<<< Updated upstream
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
-=======
-            // Extract user information from claims
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
-                                   throw new InvalidOperationException("User ID not found in claims"));
-            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? 
-                              throw new InvalidOperationException("User role not found in claims");
->>>>>>> Stashed changes
             
             var createdHotel = await hotelService.CreateHotelAsync(hotelDto, userId, userRole);
             return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.Id }, createdHotel);
@@ -81,24 +66,12 @@ public class HotelController(IHotelService hotelService, ILogger<HotelController
     }
 
     [HttpPut("{id}")]
-<<<<<<< Updated upstream
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] 
-=======
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can update hotels
->>>>>>> Stashed changes
+    [Authorize(Policy = "RequireAdminOrHotelOwner")]
     public async Task<IActionResult> UpdateHotel(int id, [FromBody] UpdateHotelRequestDto hotelDto)
     {
         try
         {
-<<<<<<< Updated upstream
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
-=======
-            // Extract user information from claims
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
-                                   throw new InvalidOperationException("User ID not found in claims"));
-            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? 
-                              throw new InvalidOperationException("User role not found in claims");
->>>>>>> Stashed changes
             
             var updatedHotel = await hotelService.UpdateHotelAsync(id, hotelDto, userId, userRole);
             return Ok(updatedHotel);
@@ -119,24 +92,12 @@ public class HotelController(IHotelService hotelService, ILogger<HotelController
     }
 
     [HttpDelete("{id}")]
-<<<<<<< Updated upstream
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] 
-=======
-    [Authorize(Policy = "RequireAdminOrHotelOwner")] // Only admins or hotel owners can delete their own hotels
->>>>>>> Stashed changes
+    [Authorize(Policy = "RequireAdminOrHotelOwner")]
     public async Task<IActionResult> DeleteHotel(int id)
     {
         try
         {
-<<<<<<< Updated upstream
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
-=======
-            // Extract user information from claims
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
-                                   throw new InvalidOperationException("User ID not found in claims"));
-            string userRole = User.FindFirstValue(ClaimTypes.Role) ?? 
-                              throw new InvalidOperationException("User role not found in claims");
->>>>>>> Stashed changes
             
             var success = await hotelService.DeleteHotelAsync(id, userId, userRole);
             return success ? NoContent() : NotFound();
@@ -157,11 +118,7 @@ public class HotelController(IHotelService hotelService, ILogger<HotelController
     }
 
     [HttpGet]
-<<<<<<< Updated upstream
-    [Authorize] 
-=======
-    [Authorize] // Any authenticated user can get hotels list
->>>>>>> Stashed changes
+    [Authorize]
     public async Task<IActionResult> GetHotels([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeInactive = false)
     {
         try
@@ -176,11 +133,7 @@ public class HotelController(IHotelService hotelService, ILogger<HotelController
     }
 
     [HttpGet("{id}")]
-<<<<<<< Updated upstream
-    [Authorize] 
-=======
-    [Authorize] // Any authenticated user can get a specific hotel
->>>>>>> Stashed changes
+    [Authorize]
     public async Task<IActionResult> GetHotelById(int id)
     {
         try
