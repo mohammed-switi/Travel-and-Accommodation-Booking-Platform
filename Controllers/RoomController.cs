@@ -11,9 +11,9 @@ namespace Final_Project.Controllers;
 public class RoomController(IRoomService roomService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetRooms([FromQuery] bool includeInactive = false)
+    public async Task<IActionResult> GetRooms([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] bool includeInactive = false)
     {
-        var rooms = await roomService.GetRoomsAsync(includeInactive);
+        var rooms = await roomService.GetRoomsAsync(page, pageSize, includeInactive);
         return rooms.Count > 0 ? Ok(rooms) : NoContent();
     }
 
