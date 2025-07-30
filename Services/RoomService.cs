@@ -25,10 +25,12 @@ public class RoomService(AppDbContext context, ILogger<RoomService> logger) : IR
         };
     }
 
-    public async Task<List<RoomDto>> GetRoomsAsync(bool includeInactive = false)
+    public async Task<List<RoomDto>> GetRoomsAsync(int page, int pageSize, bool includeInactive = false)
     {
         var rooms = await context.Rooms
             .Where(r => includeInactive || r.Hotel.IsActive)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(r => new RoomDto
             {
                 Id = r.Id,
