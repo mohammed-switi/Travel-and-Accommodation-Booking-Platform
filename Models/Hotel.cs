@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Final_Project.Enums;
+using Final_Project.Constants;
 
 namespace Final_Project.Models;
 
@@ -15,7 +16,6 @@ public class Hotel
 
     public int StarRating { get; set; }
 
-    public string Owner { get; set; }
 
     public string Location { get; set; }
 
@@ -40,4 +40,8 @@ public class Hotel
     public Boolean IsActive { get; set; } = true;
 
     public Amenities Amenities { get; set; }
+
+    // Track hotel ownership
+    public int? OwnerId { get; set; }
+    public User? Owner { get; set; }
 }
