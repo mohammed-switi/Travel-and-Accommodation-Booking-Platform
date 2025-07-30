@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Final_Project.Constants;
 using Final_Project.Data;
 using Final_Project.DTOs;
 using Final_Project.Models;
@@ -27,7 +28,7 @@ public class AuthService(
         {
             FullName = newUser.FullName,
             Email = newUser.Email.ToLower(),
-            Role = "User"
+            Role = UserRoles.User // Use the constant instead of hardcoded string
         };
 
         user.PasswordHash = passwordHasher.HashPassword(user, newUser.Password);
