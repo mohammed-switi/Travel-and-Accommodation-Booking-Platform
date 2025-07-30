@@ -11,12 +11,14 @@ public class HotelService(
     IRoomAvailabilityService roomAvailabilityService,
     ILogger<HotelService> logger) : IHotelService
 {
-    public async Task<List<HotelDto>> GetHotelsAsync(bool includeInactive = false)
+    public async Task<List<HotelDto>> GetHotelsAsync(int page, int pageSize, bool includeInactive = false)
     {
         try
         {
             var hotels = await context.Hotels
                 .Where(h => includeInactive || h.IsActive)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(h => new HotelDto
                 {
                     Id = h.Id,
