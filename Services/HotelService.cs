@@ -120,7 +120,7 @@ public class HotelService(
             MainImageId = mainImage?.Id,
             Amenities = hotelDto.Amenities,
             CreatedAt = DateTime.UtcNow,
-            OwnerId = userRole == Constants.UserRoles.HotelOwner ? userId : null // Set owner if hotel owner
+            OwnerId = hotelDto.OwnerId // Set owner if hotel owner
         };
 
         context.Hotels.Add(hotel);

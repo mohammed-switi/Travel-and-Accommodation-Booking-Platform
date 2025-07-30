@@ -35,12 +35,25 @@ ScaffoldingReadMe.txt
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
+packages/
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
 
 # Others
 ~$*
 *~
 CodeCoverage/
-.idea
+.idea/
+
+# JetBrains Rider
+.idea/
+*.sln.DotSettings.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
 # MSBuild Binary and Structured Log
 *.binlog

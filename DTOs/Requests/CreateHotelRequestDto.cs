@@ -21,4 +21,7 @@ public class CreateHotelRequestDto
     public string? ImageUrl { get; set; }
 
     public Amenities Amenities { get; set; }
+    
+    public int OwnerId { get; set; }  
+    
 }

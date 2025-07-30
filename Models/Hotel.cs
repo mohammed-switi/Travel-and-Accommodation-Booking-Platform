@@ -9,8 +9,7 @@ public class Hotel
 {
     public int Id { get; set; }
 
-    [Required]
-    public string Name { get; set; }
+    [Required] public string Name { get; set; }
 
     public string Description { get; set; }
 
@@ -31,17 +30,16 @@ public class Hotel
 
     public int? MainImageId { get; set; }
 
-    [ForeignKey("MainImageId")]
-    public HotelImage MainImage { get; set; }
+    [ForeignKey("MainImageId")] public HotelImage MainImage { get; set; }
     public ICollection<HotelImage> Images { get; set; }
 
     public ICollection<Review> Reviews { get; set; }
 
-    public Boolean IsActive { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
     public Amenities Amenities { get; set; }
 
     // Track hotel ownership
-    public int? OwnerId { get; set; }
+    public int OwnerId { get; set; }
     public User? Owner { get; set; }
 }

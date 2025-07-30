@@ -11,7 +11,7 @@ public class City
 
     public string Country { get; set; }
 
-    public string PostOffice { get; set; }
+    public string? PostOffice { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

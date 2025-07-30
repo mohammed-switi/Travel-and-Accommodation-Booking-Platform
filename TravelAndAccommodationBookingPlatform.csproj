@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>Final_Project</RootNamespace>
+        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,19 +16,44 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.7" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.7" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
         <PackageReference Include="Microsoft.SqlServer.Server" Version="1.0.0" />
+        <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
         <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
         <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.2.2" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
         <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="UnitTesting\packages.config" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\appsettings.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\appsettings.Template.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\Tests.deps.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\Tests.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\Tests\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\Tests\obj\Tests.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\TravelAndAccommodationBookingPlatform.deps.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\TravelAndAccommodationBookingPlatform.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="Tests\bin\Debug\net9.0\TravelAndAccommodationBookingPlatform.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="Tests\obj\Debug\net9.0\Tests.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="Tests\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="Tests\obj\Tests.csproj.nuget.dgspec.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Tests\" />
     </ItemGroup>
 
 </Project>

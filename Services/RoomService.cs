@@ -28,6 +28,8 @@ public class RoomService(AppDbContext context, IOwnershipValidationService owner
 
     public async Task<List<RoomResponseDto>> GetRoomsAsync(int page, int pageSize, bool includeInactive = false)
     {
+        if (page < 1) throw new ArgumentOutOfRangeException(nameof(page));
+        if (pageSize < 1) throw new ArgumentOutOfRangeException(nameof(pageSize));
         var rooms = await context.Rooms
             .Where(r => includeInactive || r.Hotel.IsActive)
             .Skip((page - 1) * pageSize)
@@ -69,7 +71,9 @@ public class RoomService(AppDbContext context, IOwnershipValidationService owner
             MaxAdults = roomDto.MaxAdults,
             MaxChildren = roomDto.MaxChildren,
             Quantity = roomDto.AvailableQuantity,
-            HotelId = hotel.Id
+            HotelId = hotel.Id,
+            RoomNumber = roomDto.RoomNumber,
+            ImageUrl = roomDto.ImageUrl
         };
 
         context.Rooms.Add(room);
@@ -82,7 +86,9 @@ public class RoomService(AppDbContext context, IOwnershipValidationService owner
             Price = room.Discount,
             MaxAdults = room.MaxAdults,
             MaxChildren = room.MaxChildren,
-            AvailableQuantity = room.Quantity
+            AvailableQuantity = room.Quantity,
+            RoomNumber = room.RoomNumber,
+            ImageUrl = room.ImageUrl
         };
     }
 
