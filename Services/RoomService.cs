@@ -19,7 +19,7 @@ public class RoomService(AppDbContext context, IOwnershipValidationService owner
         {
             Id = room.Id,
             RoomType = room.Type.ToString(),
-            Price = room.Discount,
+            Price = room.Price,
             MaxAdults = room.MaxAdults,
             MaxChildren = room.MaxChildren,
             AvailableQuantity = room.Quantity

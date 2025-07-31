@@ -17,6 +17,6 @@ public class HotelResponseDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public required ICollection<string> Images { get; set; }
-    public required ICollection<ReviewDto> Reviews { get; set; }
+    public  ICollection<ReviewDto>? Reviews { get; set; } = null;
     public Amenities Amenities { get; set; }
 }

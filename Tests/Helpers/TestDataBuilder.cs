@@ -116,7 +116,9 @@ public class TestDataBuilder
                 UpdatedAt = DateTime.UtcNow,
                 OwnerId = 1,
                 Name = "Test Hotel",
-                IsActive = true
+                IsActive = true,
+                StarRating = 4,
+                Amenities = Enums.Amenities.Wifi | Enums.Amenities.Pool
             };
         }
 
@@ -156,19 +158,21 @@ public class TestDataBuilder
             return this;
         }
 
+        public HotelBuilder WithStarRating(int starRating)
+        {
+            _hotel.StarRating = starRating;
+            return this;
+        }
+
+        public HotelBuilder WithAmenities(Enums.Amenities amenities)
+        {
+            _hotel.Amenities = amenities;
+            return this;
+        }
+
         public Hotel Build()
         {
-            // Ensure related entities exist
-            if (_hotel.City == null)
-            {
-                _hotel.City = _parent.CreateCity(_hotel.CityId).Build();
-            }
-            
-            if (_hotel.Owner == null)
-            {
-                _hotel.Owner = _parent.CreateUser(_hotel.OwnerId).Build();
-            }
-
+            // Don't set navigation properties to avoid EF tracking issues
             return _hotel;
         }
     }
@@ -194,7 +198,7 @@ public class TestDataBuilder
             {
                 Id = id,
                 Type = RoomType.Standard,
-                Discount = 100m,
+                Price = 100m,// Changed from Discount to Price
                 MaxAdults = 2,
                 MaxChildren = 1,
                 Quantity = 5,
@@ -212,7 +216,7 @@ public class TestDataBuilder
 
         public RoomBuilder WithPrice(decimal price)
         {
-            _room.Discount = price;
+            _room.Price = price; // Changed from Discount to Price
             return this;
         }
 
@@ -254,7 +258,6 @@ public class TestDataBuilder
 
         public Room Build()
         {
-            // Don't set Hotel navigation property here to avoid EF tracking issues
             return _room;
         }
     }
@@ -320,6 +323,103 @@ public class TestDataBuilder
 
     #endregion
 
+    #region HotelImage Builder
+
+    public HotelImageBuilder CreateHotelImage(int id = 1)
+    {
+        return new HotelImageBuilder(id);
+    }
+
+    public class HotelImageBuilder
+    {
+        private readonly HotelImage _hotelImage;
+
+        public HotelImageBuilder(int id)
+        {
+            _hotelImage = new HotelImage
+            {
+                Id = id,
+                Url = $"https://example.com/hotel-image-{id}.jpg",
+                HotelId = 1
+            };
+        }
+
+        public HotelImageBuilder WithUrl(string url)
+        {
+            _hotelImage.Url = url;
+            return this;
+        }
+
+        public HotelImageBuilder WithHotel(int hotelId)
+        {
+            _hotelImage.HotelId = hotelId;
+            return this;
+        }
+
+        public HotelImage Build() => _hotelImage;
+    }
+
+    #endregion
+
+    #region Review Builder
+
+    public ReviewBuilder CreateReview(int id = 1)
+    {
+        return new ReviewBuilder(this, id);
+    }
+
+    public class ReviewBuilder
+    {
+        private readonly TestDataBuilder _parent;
+        private readonly Review _review;
+
+        public ReviewBuilder(TestDataBuilder parent, int id)
+        {
+            _parent = parent;
+            _review = new Review
+            {
+                Id = id,
+                UserId = 1,
+                HotelId = 1,
+                Rating = 4,
+                Comment = "Great hotel!",
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        public ReviewBuilder WithUser(int userId)
+        {
+            _review.UserId = userId;
+            return this;
+        }
+
+        public ReviewBuilder WithHotel(int hotelId)
+        {
+            _review.HotelId = hotelId;
+            return this;
+        }
+
+        public ReviewBuilder WithRating(int rating)
+        {
+            _review.Rating = rating;
+            return this;
+        }
+
+        public ReviewBuilder WithComment(string comment)
+        {
+            _review.Comment = comment;
+            return this;
+        }
+
+        public Review Build()
+        {
+
+            return _review;
+        }
+    }
+
+    #endregion
+
     #region Seeding Methods
 
     /// <summary>
@@ -331,6 +431,8 @@ public class TestDataBuilder
         RoomType type = RoomType.Standard, 
         decimal price = 100m)
     {
+        var city = CreateCity(1).Build();
+        var owner = CreateUser(1).Build();
         var hotel = CreateHotel(hotelId)
             .WithCity(1)
             .WithOwner(1)
@@ -342,6 +444,8 @@ public class TestDataBuilder
             .WithPrice(price)
             .Build();
 
+        _context.Cities.Add(city);
+        _context.Users.Add(owner);
         _context.Hotels.Add(hotel);
         _context.Rooms.Add(room);
         await _context.SaveChangesAsync();
@@ -358,7 +462,12 @@ public class TestDataBuilder
         RoomType type = RoomType.Standard, 
         decimal price = 100m)
     {
+        var city = CreateCity(1).Build();
+        var owner = CreateUser(1).Build();
         var hotel = CreateHotel(hotelId).Build();
+        
+        _context.Cities.Add(city);
+        _context.Users.Add(owner);
         _context.Hotels.Add(hotel);
 
         var rooms = new List<Room>();
@@ -385,6 +494,11 @@ public class TestDataBuilder
     public async Task<(Hotel activeHotel, Hotel inactiveHotel, Room activeRoom, Room inactiveRoom)> 
         SeedActiveInactiveHotelsWithRoomsAsync()
     {
+        var city1 = CreateCity(1).Build();
+        var city2 = CreateCity(2).Build();
+        var owner1 = CreateUser(1).Build();
+        var owner2 = CreateUser(2).Build();
+
         var activeHotel = CreateHotel(1)
             .WithActiveStatus(true)
             .WithCity(1)
@@ -400,6 +514,8 @@ public class TestDataBuilder
         var activeRoom = CreateRoom(1).WithHotel(1).Build();
         var inactiveRoom = CreateRoom(2).WithHotel(2).Build();
 
+        _context.Cities.AddRange(city1, city2);
+        _context.Users.AddRange(owner1, owner2);
         _context.Hotels.AddRange(activeHotel, inactiveHotel);
         _context.Rooms.AddRange(activeRoom, inactiveRoom);
         await _context.SaveChangesAsync();
@@ -414,26 +530,146 @@ public class TestDataBuilder
         SeedRoomWithBookingAsync(BookingStatus bookingStatus = BookingStatus.Approved)
     {
         var room = await SeedRoomWithHotelAsync();
+        var user = CreateUser(2).Build();
         
         var booking = CreateBooking(1)
             .WithStatus(bookingStatus)
-            .WithUser(1)
+            .WithUser(2)
             .Build();
+
+        _context.Users.Add(user);
+        _context.Bookings.Add(booking);
+        await _context.SaveChangesAsync();
 
         var bookingItem = new BookingItem
         {
             Id = 1,
             RoomId = room.Id,
             BookingId = booking.Id,
-            Room = room,
-            Booking = booking
+            CheckInDate = DateTime.Today.AddDays(1),
+            CheckOutDate = DateTime.Today.AddDays(3),
+            Price = 200m
         };
 
-        _context.Bookings.Add(booking);
         _context.BookingItems.Add(bookingItem);
         await _context.SaveChangesAsync();
 
         return (room, booking, bookingItem);
+    }
+
+    /// <summary>
+    /// Seeds a complete hotel with city, owner, images, and reviews
+    /// </summary>
+    public async Task<Hotel> SeedHotelWithRelatedDataAsync(
+        int hotelId = 1,
+        string hotelName = "Test Hotel",
+        int starRating = 4,
+        bool isActive = true,
+        Amenities amenities = Enums.Amenities.Wifi | Enums.Amenities.Pool)
+    {
+        var city = CreateCity(1).WithName("Test City").Build();
+        var owner = CreateUser(1).WithName("Hotel Owner").Build();
+        var mainImage = CreateHotelImage(1).WithHotel(hotelId).Build();
+        
+        var hotel = CreateHotel(hotelId)
+            .WithName(hotelName)
+            .WithCity(city.Id)
+            .WithOwner(owner.Id)
+            .WithActiveStatus(isActive)
+            .WithStarRating(starRating)
+            .WithAmenities(amenities)
+            .Build();
+
+        hotel.MainImageId = mainImage.Id;
+
+        var review = CreateReview(1)
+            .WithHotel(hotelId)
+            .WithUser(owner.Id)
+            .WithRating(5)
+            .WithComment("Excellent service!")
+            .Build();
+
+        _context.Cities.Add(city);
+        _context.Users.Add(owner);
+        _context.HotelImages.Add(mainImage);
+        _context.Hotels.Add(hotel);
+        _context.Reviews.Add(review);
+        
+        await _context.SaveChangesAsync();
+
+        return hotel;
+    }
+
+    /// <summary>
+    /// Seeds multiple hotels for pagination and filtering tests
+    /// </summary>
+    public async Task<List<Hotel>> SeedMultipleHotelsAsync(
+        int count = 15,
+        bool mixActiveInactive = false)
+    {
+        var city = CreateCity(1).Build();
+        var owner = CreateUser(1).Build();
+        
+        _context.Cities.Add(city);
+        _context.Users.Add(owner);
+
+        var hotels = new List<Hotel>();
+        for (var i = 1; i <= count; i++)
+        {
+            var isActive = mixActiveInactive ? i % 2 == 0 : true;
+            var starRating = (i % 5) + 1; // Simple int calculation
+            var hotel = CreateHotel(i)
+                .WithName($"Hotel {i}")
+                .WithCity(1)
+                .WithOwner(1)
+                .WithActiveStatus(isActive)
+                .WithStarRating(starRating)
+                .Build();
+
+            hotels.Add(hotel);
+            _context.Hotels.Add(hotel);
+        }
+
+        await _context.SaveChangesAsync();
+        return hotels;
+    }
+
+    /// <summary>
+    /// Seeds hotel with booking data for deletion constraint tests
+    /// </summary>
+    public async Task<(Hotel hotel, Booking booking, Room room)> 
+        SeedHotelWithBookingConstraintsAsync(BookingStatus bookingStatus = BookingStatus.Approved)
+    {
+        var hotel = await SeedHotelWithRelatedDataAsync();
+        var room = CreateRoom(1)
+            .WithHotel(hotel.Id)
+            .Build();
+        var user = CreateUser(2).Build();
+        
+        var booking = CreateBooking(1)
+            .WithStatus(bookingStatus)
+            .WithUser(2)
+            .Build();
+
+        _context.Users.Add(user);
+        _context.Bookings.Add(booking);
+        _context.Rooms.Add(room);
+        await _context.SaveChangesAsync();
+
+        var bookingItem = new BookingItem
+        {
+            Id = 1,
+            RoomId = room.Id,
+            BookingId = booking.Id,
+            CheckInDate = DateTime.Today.AddDays(1),
+            CheckOutDate = DateTime.Today.AddDays(3),
+            Price = 200m
+        };
+
+        _context.BookingItems.Add(bookingItem);
+        await _context.SaveChangesAsync();
+
+        return (hotel, booking, room);
     }
 
     #endregion

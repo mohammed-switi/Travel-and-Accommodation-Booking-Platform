@@ -117,7 +117,7 @@ public class HotelService(
             StarRating = (int)hotelDto.StarRating,
             Location = hotelDto.Location,
             CityId = city.Id,
-            MainImageId = mainImage?.Id,
+            MainImageId = mainImage?.Id ,
             Amenities = hotelDto.Amenities,
             CreatedAt = DateTime.UtcNow,
             OwnerId = hotelDto.OwnerId // Set owner if hotel owner
@@ -135,17 +135,11 @@ public class HotelService(
             Description = hotel.Description,
             StarRating = hotel.StarRating,
             ImageUrl = mainImage?.Url,
-            Images = hotel.Images.Select(i => i.Url).ToList(),
-            Reviews = hotel.Reviews.Select(r => new ReviewDto
-            {
-                UserName = r.User.FullName,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt
-            }).ToList(),
+            Images = hotel.Images.Select(i => i.Url)
+                .ToList(),
             CreatedAt = hotel.CreatedAt,
             UpdatedAt = hotel.UpdatedAt,
-            Amenities = hotel.Amenities
+            Amenities = hotel.Amenities,
         };
     }
 
