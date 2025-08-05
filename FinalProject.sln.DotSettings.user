@@ -2,7 +2,7 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ADebugger_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F82987fa2a2b44e61b589ae01eb17373cd19e00_003F74_003Ff7a087fb_003FDebugger_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ASwaggerUIOptionsExtensions_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003F7b40f06d3adb7ccf3a644f547b25b3a1cad7e146e73264cd920f98d8124343a_003FSwaggerUIOptionsExtensions_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AWebApplication_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F471ce93364e941518eaf9f8fc9a3caeb16e00_003F80_003Ff64b38c8_003FWebApplication_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=06244295_002Dcab5_002D4ba5_002Da110_002D6dbcb5282659/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CreateRoomAsync_WithNegativePrice_ThrowsArgumentException" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=06244295_002Dcab5_002D4ba5_002Da110_002D6dbcb5282659/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CreateRoomAsync_WithNegativePrice_ThrowsArgumentException" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Or&gt;
     &lt;TestAncestor&gt;
       &lt;TestId&gt;xUnit::ECE2BF06-DCD6-4E22-B6FE-3202CE6D07A5::net9.0::Final_Project.Tests.ServicesTests.RoomServiceTests&lt;/TestId&gt;
@@ -12,7 +12,7 @@
 &lt;/SessionState&gt;</s:String>
 	
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=8cee828c_002Dee20_002D448b_002Da451_002D14d7a67ef305/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="GetRoomByIdAsync_WithValidId_ReturnsRoomDto" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=8cee828c_002Dee20_002D448b_002Da451_002D14d7a67ef305/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetRoomByIdAsync_WithValidId_ReturnsRoomDto" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::8B806EC5-4183-4176-ADFD-A995D44DBB73::net9.0::Final_Project.Tests.Services.RoomServiceTests.GetRoomByIdAsync_WithValidId_ReturnsRoomDto&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
