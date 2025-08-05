@@ -19,7 +19,7 @@ public class RoomService(AppDbContext context, IOwnershipValidationService owner
         {
             Id = room.Id,
             RoomType = room.Type.ToString(),
-            Price = room.Price,
+            Price = room.PricePerNight,
             MaxAdults = room.MaxAdults,
             MaxChildren = room.MaxChildren,
             AvailableQuantity = room.Quantity
@@ -67,6 +67,7 @@ public class RoomService(AppDbContext context, IOwnershipValidationService owner
         var room = new Room
         {
             Type = Enum.Parse<RoomType>(roomDto.RoomType),
+            PricePerNight = roomDto.Price,
             Discount = roomDto.Price,
             MaxAdults = roomDto.MaxAdults,
             MaxChildren = roomDto.MaxChildren,

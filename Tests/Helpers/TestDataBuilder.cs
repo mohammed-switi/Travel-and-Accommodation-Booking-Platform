@@ -197,8 +197,7 @@ public class TestDataBuilder
             _room = new Room
             {
                 Id = id,
-                Type = RoomType.Standard,
-                Price = 100m,// Changed from Discount to Price
+                Type = RoomType.Standard,// Changed from Discount to Price
                 MaxAdults = 2,
                 MaxChildren = 1,
                 Quantity = 5,
@@ -216,7 +215,7 @@ public class TestDataBuilder
 
         public RoomBuilder WithPrice(decimal price)
         {
-            _room.Price = price; // Changed from Discount to Price
+            _room.PricePerNight = price;
             return this;
         }
 

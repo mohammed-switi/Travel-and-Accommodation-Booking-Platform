@@ -75,7 +75,7 @@ public class RoomServiceTests : IDisposable
 
         // Assert
         Assert.Equal(room.Type.ToString(), result.RoomType);
-        Assert.Equal(room.Discount, result.Price);
+        Assert.Equal(room.PricePerNight, result.Price);
         Assert.Equal(room.MaxAdults, result.MaxAdults);
         Assert.Equal(room.MaxChildren, result.MaxChildren);
         Assert.Equal(room.Quantity, result.AvailableQuantity);
