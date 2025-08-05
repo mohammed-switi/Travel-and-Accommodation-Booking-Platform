@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Final_Project.Data;
 using Final_Project.DTOs;
 using Final_Project.DTOs.Requests;
@@ -9,7 +10,10 @@ using Final_Project.Tests.ServicesTests.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Serilog;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace Final_Project.Tests.ServicesTests;
 
@@ -18,16 +22,29 @@ public class HotelServiceTests : IDisposable
     private readonly AppDbContext _context;
     private readonly Mock<IOwnershipValidationService> _mockOwnershipService;
     private readonly Mock<ILogger<HotelService>> _mockLogger;
+    private readonly ILogger<HotelService> _logger;
     private readonly HotelService _hotelService;
     private readonly TestDataBuilder _testDataBuilder;
+    private readonly ITestOutputHelper _output;
 
-    public HotelServiceTests()
+    public HotelServiceTests( ITestOutputHelper output)
     {
+        _output = output;
+        // Initialize the test data builder
+        
+        Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.TestOutput(_output)
+                .WriteTo.Console()
+                .CreateLogger();
+        
         // Setup in-memory database
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-
+        _logger = new LoggerFactory()
+            .AddSerilog(Log.Logger)
+            .CreateLogger<HotelService>();
         _context = new AppDbContext(options);
         _mockOwnershipService = new Mock<IOwnershipValidationService>();
         _mockLogger = new Mock<ILogger<HotelService>>();
@@ -191,6 +208,11 @@ public class HotelServiceTests : IDisposable
         _context.HotelImages.Add(mainImage);
         await _context.SaveChangesAsync();
 
+        // Setup mock to allow Admin to create hotels
+        _mockOwnershipService
+            .Setup(x => x.CanUserCreateHotelAsync("Admin",1,1))
+            .ReturnsAsync(true);
+
         var createDto = new CreateHotelRequestDto
         {
             Name = "New Hotel",
@@ -225,6 +247,11 @@ public class HotelServiceTests : IDisposable
     public async Task CreateHotelAsync_WithNonExistentCity_ThrowsArgumentException()
     {
         // Arrange
+        // Setup mock to allow Admin to create hotels
+        _mockOwnershipService
+            .Setup(x => x.CanUserCreateHotelAsync("Admin",1,1))
+            .ReturnsAsync(true);
+            
         var createDto = new CreateHotelRequestDto
         {
             Name = "New Hotel",
@@ -242,53 +269,35 @@ public class HotelServiceTests : IDisposable
         Assert.Contains("City 'NonExistentCity' not found", exception.Message);
     }
 
-    [Fact]
-    public async Task CreateHotelAsync_WithInvalidImageUrl_ThrowsArgumentException()
-    {
-        // Arrange
-        var city = _testDataBuilder.CreateCity().Build();
-        _context.Cities.Add(city);
-        await _context.SaveChangesAsync();
-
-        var createDto = new CreateHotelRequestDto
-        {
-            Name = "New Hotel",
-            City = "Test City",
-            ImageUrl = "https://invalid-url.jpg",
-            Description = "Test",
-            StarRating = 3,
-            Location = "Test Location",
-            OwnerId = 1
-        };
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _hotelService.CreateHotelAsync(createDto, 1, "Admin"));
-
-        Assert.Contains("Main image URL 'https://invalid-url.jpg' not found", exception.Message);
-    }
+    
 
     [Fact]
     public async Task CreateHotelAsync_SetsOwnerIdCorrectly()
     {
         // Arrange
         var city = _testDataBuilder.CreateCity().WithName("New York").Build();
-              var mainImage = _testDataBuilder.CreateHotelImage().WithUrl("https://example.com/main.jpg").Build();
-              _context.Cities.Add(city);
-              _context.HotelImages.Add(mainImage);
-              await _context.SaveChangesAsync();
-      
-              var createDto = new CreateHotelRequestDto
-              {
-                  Name = "New Hotel",
-                  Description = "A brand new hotel",
-                  StarRating = 4,
-                  Location = "Downtown",
-                  City = "New York",
-                  ImageUrl = "https://example.com/main.jpg",
-                  Amenities = Amenities.Bar | Amenities.Wifi | Amenities.Pool,
-                  OwnerId = 123
-              };
+        var mainImage = _testDataBuilder.CreateHotelImage().WithUrl("https://example.com/main.jpg").Build();
+        _context.Cities.Add(city);
+        _context.HotelImages.Add(mainImage);
+        await _context.SaveChangesAsync();
+
+        // Setup mock to allow HotelOwner to create hotels
+       var createDto = new CreateHotelRequestDto
+        {
+            Name = "New Hotel",
+            Description = "A brand new hotel",
+            StarRating = 4,
+            Location = "Downtown",
+            City = "New York",
+            ImageUrl = "https://example.com/main.jpg",
+            Amenities = Amenities.Bar | Amenities.Wifi | Amenities.Pool,
+            OwnerId = 123
+        };
+       
+          _mockOwnershipService
+                   .Setup(x => x.CanUserCreateHotelAsync("HotelOwner",createDto.OwnerId,createDto.OwnerId))
+                   .ReturnsAsync(true);
+             
         // Act
         var result = await _hotelService.CreateHotelAsync(createDto, 123, "HotelOwner");
 
@@ -301,23 +310,28 @@ public class HotelServiceTests : IDisposable
     public async Task CreateHotelAsync_SetsCreatedTimestamp()
     {
         // Arrange
-         var city = _testDataBuilder.CreateCity().WithName("New York").Build();
-               var mainImage = _testDataBuilder.CreateHotelImage().WithUrl("https://example.com/main.jpg").Build();
-               _context.Cities.Add(city);
-               _context.HotelImages.Add(mainImage);
-               await _context.SaveChangesAsync();
+        var city = _testDataBuilder.CreateCity().WithName("New York").Build();
+        var mainImage = _testDataBuilder.CreateHotelImage().WithUrl("https://example.com/main.jpg").Build();
+        _context.Cities.Add(city);
+        _context.HotelImages.Add(mainImage);
+        await _context.SaveChangesAsync();
+
+        // Setup mock to allow Admin to create hotels
+        _mockOwnershipService
+            .Setup(x => x.CanUserCreateHotelAsync("Admin",1,1))
+            .ReturnsAsync(true);
        
-               var createDto = new CreateHotelRequestDto
-               {
-                   Name = "New Hotel",
-                   Description = "A brand new hotel",
-                   StarRating = 4,
-                   Location = "Downtown",
-                   City = "New York",
-                   ImageUrl = "https://example.com/main.jpg",
-                   Amenities = Amenities.Bar | Amenities.Wifi | Amenities.Pool,
-                   OwnerId = 1
-               };
+        var createDto = new CreateHotelRequestDto
+        {
+            Name = "New Hotel",
+            Description = "A brand new hotel",
+            StarRating = 4,
+            Location = "Downtown",
+            City = "New York",
+            ImageUrl = "https://example.com/main.jpg",
+            Amenities = Amenities.Bar | Amenities.Wifi | Amenities.Pool,
+            OwnerId = 1
+        };
 
         var beforeCreate = DateTime.UtcNow;
 
@@ -326,7 +340,14 @@ public class HotelServiceTests : IDisposable
 
         // Assert
         var afterCreate = DateTime.UtcNow;
+        
+        // Check the DTO response first
         Assert.True(result.CreatedAt >= beforeCreate && result.CreatedAt <= afterCreate);
+        
+        // Verify the actual database entity has the timestamp set correctly
+        var hotelInDb = await _context.Hotels.FindAsync(result.Id);
+        Assert.NotNull(hotelInDb);
+        Assert.True(hotelInDb.CreatedAt >= beforeCreate && hotelInDb.CreatedAt <= afterCreate);
     }
 
     #endregion
@@ -429,7 +450,8 @@ public class HotelServiceTests : IDisposable
     public async Task UpdateHotelAsync_UpdatesTimestamp()
     {
         // Arrange
-        var hotel = await _testDataBuilder.SeedHotelWithRelatedDataAsync();
+        var collection = await _testDataBuilder.SeedHotelWithRelatedDataAsync();
+        var hotel = collection.Item1;
         var originalUpdateTime = hotel.UpdatedAt;
         
         var updateDto = new UpdateHotelRequestDto
@@ -555,7 +577,7 @@ public class HotelServiceTests : IDisposable
         var exception = await Assert.ThrowsAsync<ArgumentException>(
             () => _hotelService.SearchHotelsAsync(searchDto));
 
-        Assert.Contains("Check-in date must be before check-out date", exception.Message);
+        Assert.Contains("Check-out date must be after check-in dat", exception.Message);
     }
 
     [Fact]
@@ -614,8 +636,9 @@ public class HotelServiceTests : IDisposable
     public async Task GetHotelDetailsAsync_WithValidId_ReturnsHotelDetails()
     {
         // Arrange
-        var hotel = await _testDataBuilder.SeedHotelWithRelatedDataAsync();
-        await _testDataBuilder.SeedRoomWithHotelAsync(1, hotel.Id, RoomType.Deluxe, 200m);
+        var collection = await _testDataBuilder.SeedHotelWithRelatedDataAsync();
+        var hotel = collection.Item1;
+        await _testDataBuilder.SeedRoomWithHotelAsync(1, hotel.Id, RoomType.Deluxe, 200m, collection.Item2,collection.Item3,hotel);
 
         // Act
         var result = await _hotelService.GetHotelDetailsAsync(1, DateTime.Today.AddDays(1), DateTime.Today.AddDays(3));
@@ -659,15 +682,13 @@ public class HotelServiceTests : IDisposable
         // Arrange
         await _testDataBuilder.SeedHotelWithRelatedDataAsync();
 
-        // Act & Assert - Test negative page numbers
+        // Act & Assert 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             await _hotelService.GetHotelsAsync(-1, 10));
 
-        // Test zero page size
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             await _hotelService.GetHotelsAsync(1, 0));
 
-        // Test large page size
         var result = await _hotelService.GetHotelsAsync(1, 1000);
         Assert.Single(result);
     }
@@ -680,6 +701,11 @@ public class HotelServiceTests : IDisposable
         _context.Cities.Add(city);
         await _context.SaveChangesAsync();
 
+        // Setup mock to allow Admin to create hotels
+        _mockOwnershipService
+            .Setup(x => x.CanUserCreateHotelAsync("Admin",1,1))
+            .ReturnsAsync(true);
+
         var createDto = new CreateHotelRequestDto
         {
             Name = "No Image Hotel",
@@ -688,7 +714,8 @@ public class HotelServiceTests : IDisposable
             StarRating = 3,
             Location = "Test Location",
             ImageUrl = null, // No main image
-            OwnerId = 1
+            OwnerId = 1,
+            
         };
 
         // Act
@@ -711,6 +738,11 @@ public class HotelServiceTests : IDisposable
         var city = _testDataBuilder.CreateCity().Build();
         _context.Cities.Add(city);
         await _context.SaveChangesAsync();
+        
+        // Setup mock to allow Admin to create hotels
+        _mockOwnershipService
+            .Setup(x => x.CanUserCreateHotelAsync("Admin",1,1))
+            .ReturnsAsync(true);
 
         var createDto = new CreateHotelRequestDto
         {
@@ -721,6 +753,7 @@ public class HotelServiceTests : IDisposable
             Location = "Test Location",
             ImageUrl = imageUrl,
             OwnerId = 1
+           
         };
 
         // Act

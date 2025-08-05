@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Final_Project.Data;
 using Final_Project.Enums;
 using Final_Project.Models;
@@ -428,24 +429,37 @@ public class TestDataBuilder
         int roomId = 1, 
         int hotelId = 1, 
         RoomType type = RoomType.Standard, 
-        decimal price = 100m)
+        decimal price = 100m,
+        City city = null,
+        User owner = null,
+        Hotel hotel = null)
     {
-        var city = CreateCity(1).Build();
-        var owner = CreateUser(1).Build();
-        var hotel = CreateHotel(hotelId)
-            .WithCity(1)
-            .WithOwner(1)
-            .Build();
-
+        if (city == null)
+        {
+            city = CreateCity(1).Build();
+            _context.Cities.Add(city);
+        }
+        if (owner == null)
+        {
+            owner = CreateUser(1).Build();
+            _context.Users.Add(owner);
+        }
+        if (hotel == null)
+        {
+            hotel = CreateHotel(hotelId)
+                .WithCity(city.Id)
+                .WithOwner(owner.Id)
+                .Build();
+            _context.Hotels.Add(hotel);
+        }
+        
         var room = CreateRoom(roomId)
             .WithHotel(hotelId)
             .WithType(type)
             .WithPrice(price)
             .Build();
 
-        _context.Cities.Add(city);
-        _context.Users.Add(owner);
-        _context.Hotels.Add(hotel);
+
         _context.Rooms.Add(room);
         await _context.SaveChangesAsync();
 
@@ -559,7 +573,7 @@ public class TestDataBuilder
     /// <summary>
     /// Seeds a complete hotel with city, owner, images, and reviews
     /// </summary>
-    public async Task<Hotel> SeedHotelWithRelatedDataAsync(
+    public async Task<(Hotel,City,User, HotelImage,Review)> SeedHotelWithRelatedDataAsync(
         int hotelId = 1,
         string hotelName = "Test Hotel",
         int starRating = 4,
@@ -596,7 +610,7 @@ public class TestDataBuilder
         
         await _context.SaveChangesAsync();
 
-        return hotel;
+        return (hotel, city, owner, mainImage, review);
     }
 
     /// <summary>
@@ -639,7 +653,8 @@ public class TestDataBuilder
     public async Task<(Hotel hotel, Booking booking, Room room)> 
         SeedHotelWithBookingConstraintsAsync(BookingStatus bookingStatus = BookingStatus.Approved)
     {
-        var hotel = await SeedHotelWithRelatedDataAsync();
+        var collection = await SeedHotelWithRelatedDataAsync();
+        var hotel = collection.Item1;
         var room = CreateRoom(1)
             .WithHotel(hotel.Id)
             .Build();

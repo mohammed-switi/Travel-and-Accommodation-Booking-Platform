@@ -16,7 +16,7 @@ public class HotelResponseDto
     public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public required ICollection<string> Images { get; set; }
-    public  ICollection<ReviewDto>? Reviews { get; set; } = null;
+    public  ICollection<string>? Images { get; set; }
+    public  ICollection<ReviewDto>? Reviews { get; set; }
     public Amenities Amenities { get; set; }
 }

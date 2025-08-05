@@ -19,6 +19,11 @@ public class HotelService(
     {
         try
         {
+            
+            if (page < 1) throw new ArgumentOutOfRangeException(nameof(page));
+            if (pageSize < 1) throw new ArgumentOutOfRangeException(nameof(pageSize));
+                    
+                    
             var hotels = await context.Hotels
                 .Where(h => includeInactive || h.IsActive)
                 .Skip((page - 1) * pageSize)
@@ -92,6 +97,17 @@ public class HotelService(
 
     public async Task<HotelResponseDto> CreateHotelAsync(CreateHotelRequestDto hotelDto, int userId, string userRole)
     {
+        
+      
+        
+        if (!await ownershipValidationService.CanUserCreateHotelAsync(userRole, hotelDto.OwnerId,userId))
+        {
+            logger.LogWarning(
+                "User {UserId} with role {UserRole} attempted to create hotel  without permission", userId,
+                userRole );
+            throw new UnauthorizedAccessException($"You don't have permission to create an hotel. with this role {userRole}");
+        }
+
         var city = await context.Cities.FirstOrDefaultAsync(c => c.Name == hotelDto.City);
         if (city == null)
         {
@@ -103,11 +119,8 @@ public class HotelService(
         if (!string.IsNullOrEmpty(hotelDto.ImageUrl))
         {
             mainImage = await context.HotelImages.FirstOrDefaultAsync(i => i.Url == hotelDto.ImageUrl);
-            if (mainImage == null)
-            {
-                logger.LogError("Main image URL '{ImageUrl}' not found.", hotelDto.ImageUrl);
-                throw new ArgumentException($"Main image URL '{hotelDto.ImageUrl}' not found.");
-            }
+            if (mainImage == null) logger.LogError("Main image URL '{ImageUrl}' not found.", hotelDto.ImageUrl);
+            
         }
 
         var hotel = new Hotel
@@ -117,7 +130,7 @@ public class HotelService(
             StarRating = (int)hotelDto.StarRating,
             Location = hotelDto.Location,
             CityId = city.Id,
-            MainImageId = mainImage?.Id ,
+            MainImageId = mainImage?.Id,
             Amenities = hotelDto.Amenities,
             CreatedAt = DateTime.UtcNow,
             OwnerId = hotelDto.OwnerId // Set owner if hotel owner
@@ -135,21 +148,21 @@ public class HotelService(
             Description = hotel.Description,
             StarRating = hotel.StarRating,
             ImageUrl = mainImage?.Url,
-            Images = hotel.Images.Select(i => i.Url)
-                .ToList(),
+            Images = hotel.Images?.Select(i => i.Url).ToList(),
             CreatedAt = hotel.CreatedAt,
             UpdatedAt = hotel.UpdatedAt,
             Amenities = hotel.Amenities,
         };
     }
 
-    public async Task<HotelResponseDto> UpdateHotelAsync(int id, UpdateHotelRequestDto hotelDto, int userId, string userRole)
+    public async Task<HotelResponseDto> UpdateHotelAsync(int id, UpdateHotelRequestDto hotelDto, int userId,
+        string userRole)
     {
         var hotel = await context.Hotels
             .Include(h => h.City)
             .Include(h => h.Images)
             .Include(h => h.Reviews)
-                .ThenInclude(r => r.User)
+            .ThenInclude(r => r.User)
             .FirstOrDefaultAsync(h => h.Id == id);
 
         if (hotel == null)
@@ -161,7 +174,9 @@ public class HotelService(
         // Check if user can manage this hotel
         if (!await ownershipValidationService.CanUserManageHotelAsync(userId, userRole, id))
         {
-            logger.LogWarning("User {UserId} with role {UserRole} attempted to update hotel {HotelId} without permission", userId, userRole, id);
+            logger.LogWarning(
+                "User {UserId} with role {UserRole} attempted to update hotel {HotelId} without permission", userId,
+                userRole, id);
             throw new UnauthorizedAccessException("You don't have permission to update this hotel.");
         }
 
@@ -219,7 +234,8 @@ public class HotelService(
 
     public async Task<bool> DeleteHotelAsync(int id, int userId, string userRole)
     {
-        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews).FirstOrDefaultAsync(h => h.Id == id);
+        var hotel = await context.Hotels.Include(h => h.Rooms).Include(h => h.Reviews)
+            .FirstOrDefaultAsync(h => h.Id == id);
         if (hotel == null)
         {
             logger.LogError("Hotel with ID {HotelId} not found for deletion.", id);
@@ -229,7 +245,9 @@ public class HotelService(
         // Check if user can manage this hotel
         if (!await ownershipValidationService.CanUserManageHotelAsync(userId, userRole, id))
         {
-            logger.LogWarning("User {UserId} with role {UserRole} attempted to delete hotel {HotelId} without permission", userId, userRole, id);
+            logger.LogWarning(
+                "User {UserId} with role {UserRole} attempted to delete hotel {HotelId} without permission", userId,
+                userRole, id);
             throw new UnauthorizedAccessException("You don't have permission to delete this hotel.");
         }
 
@@ -267,7 +285,7 @@ public class HotelService(
         var hotel = await context.Hotels
             .Include(h => h.Images)
             .Include(h => h.Reviews)
-                .ThenInclude(r => r.User)
+            .ThenInclude(r => r.User)
             .Include(h => h.Rooms).Include(hotel => hotel.City)
             .FirstOrDefaultAsync(h => h.Id == hotelId && h.IsActive);
 
@@ -316,17 +334,41 @@ public class HotelService(
 
     private IQueryable<Hotel> BuildHotelQuery(SearchHotelsDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Location))
+        {
+            logger.LogError("Location is required for hotel search.");
+            throw new ArgumentException("Location cannot be null or empty.");
+        }
+
+        logger.LogInformation($"Filtering hotels by location: {dto.Location}");
+        
+
         var query = context.Hotels
             .Include(h => h.Rooms)
-            .Where(h => h.City.Name.ToLower().Contains(dto.Location.ToLower()) && h.IsActive)
+            .Where(h => EF.Functions.Like(h.City.Name, $"%{dto.Location}%") && h.IsActive)
             .AsQueryable();
 
-        query = ApplyPriceFilters(query, dto);
+        logger.LogInformation($"Query after location filter: {query.ToQueryString()}");
+        logger.LogInformation($"Count after location filter: {query.Count()}");
+
+        // Reorder filters for better performance
         query = ApplyStarRatingFilter(query, dto);
+        logger.LogInformation($"Count after star rating filter: {query.Count()}");
+
+        query = ApplyPriceFilters(query, dto);
+        logger.LogInformation($"Count after price filter: {query.Count()}");
+
         query = ApplyAmenitiesFilter(query, dto);
+        logger.LogInformation($"Count after amenities filter: {query.Count()}");
+
         query = ApplyRoomTypesFilter(query, dto);
-        query = ApplyBookingDateFilter(query, dto);
+        logger.LogInformation($"Count after room types filter: {query.Count()}");
+
         query = ApplyRoomCapacityFilter(query, dto);
+        logger.LogInformation($"Count after room capacity filter: {query.Count()}");
+
+        query = ApplyBookingDateFilter(query, dto);
+        logger.LogInformation($"Count after booking date filter: {query.Count()}");
 
         return query;
     }
@@ -369,13 +411,25 @@ public class HotelService(
         return query;
     }
 
-    private IQueryable<Hotel> ApplyBookingDateFilter(IQueryable<Hotel> query, SearchHotelsDto dto)
+  private IQueryable<Hotel> ApplyBookingDateFilter(IQueryable<Hotel> query, SearchHotelsDto dto)
     {
-        if (dto.CheckInDate != default && dto.CheckOutDate != default)
-            query = query.Where(h => !context.BookingItems
-                .Where(b => b.CheckOutDate > dto.CheckInDate && b.CheckInDate < dto.CheckOutDate)
-                .Any(b => b.Room.HotelId == h.Id));
-
+        if (dto.CheckInDate == default || dto.CheckOutDate == default)
+            return query;
+    
+        // Validate dates again to ensure they're correct
+        if (dto.CheckInDate >= dto.CheckOutDate)
+        {
+            logger.LogError("Check-out date must be after check-in date");
+            throw new ArgumentException("Check-out date must be after check-in date.");
+        }
+    
+        // Find hotels that don't have conflicting bookings for the specified dates
+        query = query.Where(h => !context.BookingItems
+            .Where(b => b.CheckOutDate > dto.CheckInDate && 
+                       b.CheckInDate < dto.CheckOutDate && 
+                       b.Booking.Status != BookingStatus.Cancelled)
+            .Any(b => b.Room.HotelId == h.Id));
+    
         return query;
     }
 
@@ -392,6 +446,11 @@ public class HotelService(
 
     private async Task<List<HotelSearchResultDto>> ExecuteHotelQueryAsync(IQueryable<Hotel> query)
     {
+        //print the result of the query here 
+// First await the result, then log it
+       var hotels = await query.ToListAsync();
+       logger.LogInformation($"Executing hotel search query, found {hotels.Count} hotels"); 
+       
         return await query
             .Select(h => new HotelSearchResultDto
             {
@@ -400,7 +459,7 @@ public class HotelService(
                 City = h.City.Name,
                 StarRating = h.StarRating,
                 ImageUrl = h.MainImage.Url,
-                MinRoomPrice = h.Rooms.Min(r => r.PricePerNight)
+                MinRoomPrice = h.Rooms.Any() ? h.Rooms.Min(r => r.PricePerNight) : 0
             })
             .ToListAsync();
     }

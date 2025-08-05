@@ -5,8 +5,30 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Final_Project.Services;
 
-public class OwnershipValidationService(AppDbContext context) : IOwnershipValidationService
+public class OwnershipValidationService(AppDbContext context, ILogger<OwnershipValidationService> logger) : IOwnershipValidationService
 {
+    
+   
+    
+    private async Task<bool> IsHotelOwnerCreatingHotelAsync(int ownerId, int userId)
+    {
+        return ownerId == userId;
+     
+    }
+    
+    public async Task<bool> CanUserCreateHotelAsync( string userRole, int ownerId = 0, int userId =0 ){
+
+        if(userRole == UserRoles.Admin)
+        {
+            return true;
+        }
+        if (userRole == UserRoles.HotelOwner)
+        {
+            return await IsHotelOwnerCreatingHotelAsync(ownerId, userId);
+        }
+        
+        return false;
+    }
     public async Task<bool> CanUserManageHotelAsync(int userId, string userRole, int hotelId)
     {
         if (userRole == UserRoles.Admin)

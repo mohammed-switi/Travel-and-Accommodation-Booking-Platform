@@ -41,5 +41,6 @@ public class Hotel
 
     // Track hotel ownership
     public int OwnerId { get; set; }
+    [ForeignKey("OwnerId")]
     public User? Owner { get; set; }
 }
