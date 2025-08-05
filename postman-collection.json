@@ -1,0 +1,1670 @@
+{
+  "info": {
+    "name": "Travel and Accommodation Booking Platform API",
+    "description": "Complete API collection for the Travel and Accommodation Booking Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "travel-booking-api-v1",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.example.com",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token for authentication"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string",
+      "description": "Current user ID"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string",
+      "description": "Last created booking ID"
+    },
+    {
+      "key": "hotelId",
+      "value": "",
+      "type": "string",
+      "description": "Hotel ID for testing"
+    },
+    {
+      "key": "cityId",
+      "value": "",
+      "type": "string",
+      "description": "City ID for testing"
+    },
+    {
+      "key": "roomId",
+      "value": "",
+      "type": "string",
+      "description": "Room ID for testing"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store user data if available in response",
+                  "    if (responseJson.userId) {",
+                  "        pm.collectionVariables.set('userId', responseJson.userId);",
+                  "    }",
+                  "    ",
+                  "    if (responseJson.token || responseJson.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', responseJson.token || responseJson.accessToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"confirmPassword\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains token', function () {",
+                  "        pm.expect(responseJson).to.have.any.keys(['token', 'accessToken', 'access_token']);",
+                  "    });",
+                  "    ",
+                  "    // Store access token for subsequent requests",
+                  "    if (responseJson.token) {",
+                  "        pm.collectionVariables.set('accessToken', responseJson.token);",
+                  "    } else if (responseJson.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', responseJson.accessToken);",
+                  "    } else if (responseJson.access_token) {",
+                  "        pm.collectionVariables.set('accessToken', responseJson.access_token);",
+                  "    }",
+                  "    ",
+                  "    // Store user ID if available",
+                  "    if (responseJson.userId || responseJson.user?.id) {",
+                  "        pm.collectionVariables.set('userId', responseJson.userId || responseJson.user.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"NewSecurePassword123!\",\n  \"confirmPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Logout User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Clear access token on successful logout",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', '');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cities",
+      "item": [
+        {
+          "name": "Get All Cities",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response should be an array or contain data array', function () {",
+                  "        pm.expect(responseJson).to.satisfy(function(response) {",
+                  "            return Array.isArray(response) || Array.isArray(response.data);",
+                  "        });",
+                  "    });",
+                  "    ",
+                  "    // Store first city ID for further testing",
+                  "    const cities = Array.isArray(responseJson) ? responseJson : responseJson.data;",
+                  "    if (cities && cities.length > 0 && cities[0].id) {",
+                  "        pm.collectionVariables.set('cityId', cities[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cities?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cities"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create City",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store created city ID",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('cityId', responseJson.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dubai\",\n  \"country\": \"UAE\",\n  \"postOffice\": \"Dubai Main Post Office\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cities"]
+            }
+          }
+        },
+        {
+          "name": "Get City by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains city details', function () {",
+                  "        pm.expect(responseJson).to.have.property('name');",
+                  "        pm.expect(responseJson).to.have.property('country');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cities/{{cityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cities", "{{cityId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update City",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dubai Updated\",\n  \"country\": \"United Arab Emirates\",\n  \"postOffice\": \"Dubai Central Post Office\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cities/{{cityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cities", "{{cityId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete City",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cities/{{cityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cities", "{{cityId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hotels",
+      "item": [
+        {
+          "name": "Get All Hotels",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store first hotel ID for further testing",
+                  "    const hotels = Array.isArray(responseJson) ? responseJson : responseJson.data;",
+                  "    if (hotels && hotels.length > 0 && hotels[0].id) {",
+                  "        pm.collectionVariables.set('hotelId', hotels[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels?page=1&pageSize=10&includeInactive=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "includeInactive",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store created hotel ID",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('hotelId', responseJson.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Luxury Dubai Hotel\",\n  \"city\": \"Dubai\",\n  \"location\": \"Downtown Dubai\",\n  \"description\": \"A luxurious 5-star hotel in the heart of Dubai\",\n  \"starRating\": 5.0,\n  \"imageUrl\": \"https://example.com/hotel-image.jpg\",\n  \"amenities\": 127,\n  \"ownerId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels"]
+            }
+          }
+        },
+        {
+          "name": "Search Hotels",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set dynamic dates for search",
+                  "const checkInDate = new Date();",
+                  "checkInDate.setDate(checkInDate.getDate() + 7); // 7 days from now",
+                  "",
+                  "const checkOutDate = new Date();",
+                  "checkOutDate.setDate(checkOutDate.getDate() + 10); // 10 days from now",
+                  "",
+                  "pm.collectionVariables.set('checkInDate', checkInDate.toISOString());",
+                  "pm.collectionVariables.set('checkOutDate', checkOutDate.toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains search results', function () {",
+                  "        pm.expect(responseJson).to.satisfy(function(response) {",
+                  "            return Array.isArray(response) || response.results || response.data;",
+                  "        });",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"Dubai\",\n  \"checkInDate\": \"{{checkInDate}}\",\n  \"checkOutDate\": \"{{checkOutDate}}\",\n  \"adults\": 2,\n  \"children\": 0,\n  \"rooms\": 1,\n  \"minPrice\": 100,\n  \"maxPrice\": 1000,\n  \"starRating\": 4,\n  \"amenities\": [1, 2, 4],\n  \"roomTypes\": [0, 1]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels", "search"]
+            }
+          }
+        },
+        {
+          "name": "Get Hotel by ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set dynamic dates for hotel details",
+                  "const checkInDate = new Date();",
+                  "checkInDate.setDate(checkInDate.getDate() + 7);",
+                  "",
+                  "const checkOutDate = new Date();",
+                  "checkOutDate.setDate(checkOutDate.getDate() + 10);",
+                  "",
+                  "pm.collectionVariables.set('checkInDate', checkInDate.toISOString());",
+                  "pm.collectionVariables.set('checkOutDate', checkOutDate.toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains hotel details', function () {",
+                  "        pm.expect(responseJson).to.have.property('name');",
+                  "        pm.expect(responseJson).to.have.property('city');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels/{{hotelId}}?checkIn={{checkInDate}}&checkOut={{checkOutDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels", "{{hotelId}}"],
+              "query": [
+                {
+                  "key": "checkIn",
+                  "value": "{{checkInDate}}"
+                },
+                {
+                  "key": "checkOut",
+                  "value": "{{checkOutDate}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Hotel Admin by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels/{{hotelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels", "{{hotelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Luxury Dubai Hotel\",\n  \"city\": \"Dubai\",\n  \"location\": \"Downtown Dubai - Updated Location\",\n  \"description\": \"An updated luxurious 5-star hotel in the heart of Dubai\",\n  \"starRating\": 5.0,\n  \"imageUrl\": \"https://example.com/updated-hotel-image.jpg\",\n  \"amenities\": 255\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels/{{hotelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels", "{{hotelId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels/{{hotelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels", "{{hotelId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Get All Rooms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store first room ID for further testing",
+                  "    const rooms = Array.isArray(responseJson) ? responseJson : responseJson.data;",
+                  "    if (rooms && rooms.length > 0 && rooms[0].id) {",
+                  "        pm.collectionVariables.set('roomId', rooms[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms?page=1&pageSize=10&includeInactive=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "includeInactive",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store created room ID",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('roomId', responseJson.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": \"{{hotelId}}\",\n  \"roomType\": \"Deluxe Suite\",\n  \"price\": 299.99,\n  \"maxAdults\": 2,\n  \"maxChildren\": 1,\n  \"availableQuantity\": 5,\n  \"roomNumber\": \"101\",\n  \"imageUrl\": \"https://example.com/room-image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get Room by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains room details', function () {",
+                  "        pm.expect(responseJson).to.have.property('roomType');",
+                  "        pm.expect(responseJson).to.have.property('price');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomType\": \"Updated Deluxe Suite\",\n  \"price\": 349.99,\n  \"maxAdults\": 3,\n  \"maxChildren\": 2,\n  \"availableQuantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Get Shopping Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "cart"]
+            }
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set dynamic dates for booking",
+                  "const checkInDate = new Date();",
+                  "checkInDate.setDate(checkInDate.getDate() + 7);",
+                  "",
+                  "const checkOutDate = new Date();",
+                  "checkOutDate.setDate(checkOutDate.getDate() + 10);",
+                  "",
+                  "pm.collectionVariables.set('checkInDate', checkInDate.toISOString());",
+                  "pm.collectionVariables.set('checkOutDate', checkOutDate.toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store cart item ID if available",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('cartItemId', responseJson.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"{{roomId}}\",\n  \"checkInDate\": \"{{checkInDate}}\",\n  \"checkOutDate\": \"{{checkOutDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "cart", "add"]
+            }
+          }
+        },
+        {
+          "name": "Remove from Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/cart/remove/{{cartItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "cart", "remove", "{{cartItemId}}"]
+            }
+          }
+        },
+        {
+          "name": "Checkout Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Store booking details",
+                  "    if (responseJson.id) {",
+                  "        pm.collectionVariables.set('bookingId', responseJson.id);",
+                  "    }",
+                  "    if (responseJson.reference) {",
+                  "        pm.collectionVariables.set('bookingReference', responseJson.reference);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactName\": \"John Doe\",\n  \"contactPhone\": \"+1-555-123-4567\",\n  \"contactEmail\": \"john.doe@example.com\",\n  \"paymentMethod\": \"Credit Card\",\n  \"specialRequests\": \"Late check-in requested\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains booking details', function () {",
+                  "        pm.expect(responseJson).to.have.property('id');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{bookingId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking by Reference",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response contains booking details', function () {",
+                  "        pm.expect(responseJson).to.have.property('reference');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/reference/{{bookingReference}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "reference", "{{bookingReference}}"]
+            }
+          }
+        },
+        {
+          "name": "Get User Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response should be an array or contain data array', function () {",
+                  "        pm.expect(responseJson).to.satisfy(function(response) {",
+                  "            return Array.isArray(response) || Array.isArray(response.data);",
+                  "        });",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "user"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Home",
+      "item": [
+        {
+          "name": "Get Featured Deals",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response should contain deals data', function () {",
+                  "        pm.expect(responseJson).to.satisfy(function(response) {",
+                  "            return Array.isArray(response) || response.deals || response.data;",
+                  "        });",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/home/featured-deals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "home", "featured-deals"]
+            }
+          }
+        },
+        {
+          "name": "Get Recently Viewed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/home/recently-viewed",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "home", "recently-viewed"]
+            }
+          }
+        },
+        {
+          "name": "Get Trending Destinations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is JSON', function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response should contain destinations data', function () {",
+                  "        pm.expect(responseJson).to.satisfy(function(response) {",
+                  "            return Array.isArray(response) || response.destinations || response.data;",
+                  "        });",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/home/trending-destinations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "home", "trending-destinations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test Setup & Teardown",
+      "item": [
+        {
+          "name": "Setup Test Data",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// This script can be used to set up test data",
+                  "// Add any initialization logic here",
+                  "console.log('Setting up test data...');",
+                  "",
+                  "// Set default test values",
+                  "pm.collectionVariables.set('testEmail', 'test.user@example.com');",
+                  "pm.collectionVariables.set('testPassword', 'TestPassword123!');",
+                  "pm.collectionVariables.set('resetToken', 'sample-reset-token-12345');",
+                  "",
+                  "// Set test booking reference if not exists",
+                  "if (!pm.collectionVariables.get('bookingReference')) {",
+                  "    pm.collectionVariables.set('bookingReference', 'BOOK-12345-ABCDE');",
+                  "}",
+                  "",
+                  "// Set test IDs if not exists",
+                  "if (!pm.collectionVariables.get('cartItemId')) {",
+                  "    pm.collectionVariables.set('cartItemId', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Test data setup completed', function () {",
+                  "    pm.expect(pm.collectionVariables.get('testEmail')).to.not.be.empty;",
+                  "    pm.expect(pm.collectionVariables.get('testPassword')).to.not.be.empty;",
+                  "    console.log('Test data setup completed successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/home/featured-deals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "home", "featured-deals"]
+            }
+          }
+        },
+        {
+          "name": "Clean Up Test Data",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// This script can be used to clean up test data",
+                  "console.log('Cleaning up test data...');",
+                  "",
+                  "// Note: In a real scenario, you might want to delete test records",
+                  "// created during the test run. This could involve API calls to",
+                  "// delete test cities, hotels, rooms, bookings, etc.",
+                  "",
+                  "// For now, we'll just clear some variables",
+                  "pm.collectionVariables.unset('bookingId');",
+                  "pm.collectionVariables.unset('bookingReference');",
+                  "pm.collectionVariables.unset('cartItemId');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cleanup completed', function () {",
+                  "    console.log('Test data cleanup completed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "// This runs before every request in the collection",
+          "",
+          "// Add timestamp for dynamic values",
+          "pm.globals.set('timestamp', new Date().getTime());",
+          "",
+          "// Add random number for unique values",
+          "pm.globals.set('randomNumber', Math.floor(Math.random() * 10000));"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "// This runs after every request in the collection",
+          "",
+          "// Common response time test",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Common content type test for successful requests",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "    pm.test('Content-Type is application/json', function () {",
+          "        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
