@@ -13,7 +13,9 @@ public class Booking
     public User User { set; get; }
     
     public string BookingReference { get; set; } = Guid.NewGuid().ToString();
-    public ICollection<BookingItem> Items { get; set; }
+    
+    
+    public ICollection<BookingItem> Items { get; set; } = new List<BookingItem>();
 
     public decimal TotalPrice { get; set; }
     public DateTime BookingDate { get; set; } = DateTime.UtcNow;
@@ -22,6 +24,6 @@ public class Booking
     public string ContactPhone { get; set; }
     public string ContactEmail { get; set; }
     public string PaymentMethod { get; set; } 
-    public string SpecialRequests { get; set; }
+    public string? SpecialRequests { get; set; }
     public BookingStatus Status { get; set; }
 }
