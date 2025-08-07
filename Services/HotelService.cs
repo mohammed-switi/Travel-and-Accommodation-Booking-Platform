@@ -6,6 +6,7 @@ using Final_Project.Interfaces;
 using Final_Project.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Final_Project.Constants;
 using Final_Project.Enums;
 
 namespace Final_Project.Services;
@@ -38,7 +39,7 @@ public class HotelService(
                     Description = h.Description,
                     ImageUrl = h.MainImage.Url,
                     Images = h.Images.Select(i => i.Url).ToList(),
-                    Amenities = h.Amenities,
+                    Amenities =h.Amenities, 
                     Reviews = h.Reviews.Select(r => new ReviewDto
                     {
                         UserName = r.User.FullName,
@@ -50,6 +51,16 @@ public class HotelService(
                     UpdatedAt = h.UpdatedAt
                 })
                 .ToListAsync();
+            
+            foreach (var hotel in hotels)
+            {
+                var enumValue = (Amenities)hotel.Amenities;
+                hotel.AmenitiesList = Enum.GetValues(typeof(Amenities))
+                    .Cast<Amenities>()
+                    .Where(a => a != Amenities.None && enumValue.HasFlag(a))
+                    .Select(a => a.ToString())
+                    .ToList();
+            }
 
             if (!hotels.Any()) logger.LogWarning("No active hotels found in the database.");
 
@@ -62,7 +73,7 @@ public class HotelService(
         }
     }
 
-    public async Task<HotelResponseDto> GetHotelByIdAsync(int id)
+    private async Task<HotelResponseDto> GetHotelByIdAsync(int id)
     {
         var hotel = await context.Hotels
             .Where(h => h.Id == id && h.IsActive)
@@ -71,19 +82,24 @@ public class HotelService(
                 Id = hl.Id,
                 Name = hl.Name,
                 StarRating = hl.StarRating,
-                City = hl.City.Name,
-                Location = hl.City.Name,
-                Description = hl.Description,
-                ImageUrl = hl.MainImage.Url,
-                Images = hl.Images.Select(i => i.Url).ToList(),
+                City = hl.City != null ? hl.City.Name : "Unknown City",
+                Location = hl.City != null ? hl.City.Name : "Unknown Location",
+                Description = hl.Description ?? string.Empty,
+                ImageUrl = hl.MainImage != null ? hl.MainImage.Url : string.Empty,
+                Images = hl.Images != null ? hl.Images.Select(i => i.Url ?? string.Empty).ToList() : new List<string>(),
                 Amenities = hl.Amenities,
-                Reviews = hl.Reviews.Select(r => new ReviewDto
+                AmenitiesList = Enum.GetValues(typeof(Amenities))
+                                    .Cast<Amenities>()
+                                    .Where(a => a != Amenities.None && hl.Amenities.HasFlag(a))
+                                    .Select(a => a.ToString())
+                                    .ToList(),
+                Reviews = hl.Reviews != null ? hl.Reviews.Select(r => new ReviewDto
                 {
-                    UserName = r.User.FullName,
+                    UserName = r.User != null ? r.User.FullName ?? "Anonymous" : "Anonymous",
                     Rating = r.Rating,
-                    Comment = r.Comment,
+                    Comment = r.Comment ?? string.Empty,
                     CreatedAt = r.CreatedAt
-                }).ToList(),
+                }).ToList() : new List<ReviewDto>(),
                 CreatedAt = hl.CreatedAt,
                 UpdatedAt = hl.UpdatedAt
             })
@@ -93,6 +109,78 @@ public class HotelService(
         if (ReferenceEquals(hotel, null)) logger.LogWarning("Hotel with ID {HotelId} not found.", id);
 
         return hotel ?? throw new InvalidOperationException("Hotel not found.");
+    }
+
+    public async Task<HotelResponseDto> GetHotelByIdAsync(int id, ClaimsPrincipal? user = null)
+    {
+        var hotel = await GetHotelByIdAsync(id);
+        
+        // Add to recently viewed if user is authenticated and not an admin
+        if (user != null && user.Identity!.IsAuthenticated)
+        {
+            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole != UserRoles.Admin)
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
+                {
+                    await AddToRecentlyViewedAsync(userId, id);
+                }
+            }
+        }
+        
+        return hotel;
+    }
+
+    private async Task AddToRecentlyViewedAsync(int userId, int hotelId)
+    {
+        try
+        {
+            // Check if this hotel is already in the user's recently viewed list
+            var existingEntry = await context.RecentlyViewedHotels
+                .FirstOrDefaultAsync(rv => rv.UserId == userId && rv.HotelId == hotelId);
+
+            if (existingEntry != null)
+            {
+                // Update the viewed time if entry already exists
+                existingEntry.ViewedAt = DateTime.UtcNow;
+                context.RecentlyViewedHotels.Update(existingEntry);
+                logger.LogInformation("Updated recently viewed timestamp for user {UserId} and hotel {HotelId}", userId, hotelId);
+            }
+            else
+            {
+                // Add new entry
+                var recentlyViewedHotel = new RecentlyViewedHotel
+                {
+                    UserId = userId,
+                    HotelId = hotelId,
+                    ViewedAt = DateTime.UtcNow
+                };
+
+                context.RecentlyViewedHotels.Add(recentlyViewedHotel);
+                logger.LogInformation("Added hotel {HotelId} to recently viewed for user {UserId}", hotelId, userId);
+            }
+
+            // Keep only the last 10 recently viewed hotels per user
+            var userViewedHotels = await context.RecentlyViewedHotels
+                .Where(rv => rv.UserId == userId)
+                .OrderByDescending(rv => rv.ViewedAt)
+                .Skip(10)
+                .ToListAsync();
+
+            if (userViewedHotels.Any())
+            {
+                context.RecentlyViewedHotels.RemoveRange(userViewedHotels);
+                logger.LogInformation("Removed {Count} old recently viewed entries for user {UserId}", userViewedHotels.Count, userId);
+            }
+
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error adding hotel {HotelId} to recently viewed for user {UserId}", hotelId, userId);
+            // Don't throw the exception as this is a non-critical feature
+        }
     }
 
     public async Task<HotelResponseDto> CreateHotelAsync(CreateHotelRequestDto hotelDto, int userId, string userRole)
@@ -133,7 +221,7 @@ public class HotelService(
             MainImageId = mainImage?.Id,
             Amenities = hotelDto.Amenities,
             CreatedAt = DateTime.UtcNow,
-            OwnerId = hotelDto.OwnerId // Set owner if hotel owner
+            OwnerId = userRole == UserRoles.Admin ? hotelDto.OwnerId : userId // Set owner if hotel owner
         };
 
         context.Hotels.Add(hotel);
@@ -152,6 +240,11 @@ public class HotelService(
             CreatedAt = hotel.CreatedAt,
             UpdatedAt = hotel.UpdatedAt,
             Amenities = hotel.Amenities,
+              AmenitiesList = Enum.GetValues(typeof(Amenities))
+                                                .Cast<Amenities>()
+                                                .Where(a => a != Amenities.None && hotel.Amenities.HasFlag(a))
+                                                .Select(a => a.ToString())
+                                                .ToList(),
         };
     }
 
@@ -228,7 +321,13 @@ public class HotelService(
             }).ToList(),
             CreatedAt = hotel.CreatedAt,
             UpdatedAt = hotel.UpdatedAt,
-            Amenities = hotel.Amenities
+            Amenities = hotel.Amenities,
+            
+              AmenitiesList = Enum.GetValues(typeof(Amenities))
+                                                .Cast<Amenities>()
+                                                .Where(a => a != Amenities.None && hotel.Amenities.HasFlag(a))
+                                                .Select(a => a.ToString())
+                                                .ToList(),
         };
     }
 
@@ -280,13 +379,15 @@ public class HotelService(
         return result;
     }
 
-    public async Task<HotelResponseDto?> GetHotelDetailsAsync(int hotelId, DateTime? checkIn, DateTime? checkOut)
+    public async Task<HotelResponseDto?> GetHotelByIdAsync(int hotelId, DateTime? checkIn, DateTime? checkOut, ClaimsPrincipal? user = null)
     {
         var hotel = await context.Hotels
             .Include(h => h.Images)
             .Include(h => h.Reviews)
             .ThenInclude(r => r.User)
-            .Include(h => h.Rooms).Include(hotel => hotel.City)
+            .Include(h => h.Rooms)
+            .Include(h => h.City)
+            .Include(h => h.MainImage)
             .FirstOrDefaultAsync(h => h.Id == hotelId && h.IsActive);
 
         if (hotel == null)
@@ -295,32 +396,101 @@ public class HotelService(
             return null;
         }
 
+        // Add to recently viewed if user is authenticated and not an admin
+        if (user != null && user.Identity!.IsAuthenticated)
+        {
+            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole != UserRoles.Admin)
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
+                {
+                    await AddToRecentlyViewedAsync(userId, hotelId);
+                }
+            }
+        }
+
+        // Filter rooms based on availability if check-in and check-out dates are provided
+        var availableRooms = hotel.Rooms.AsEnumerable();
+        if (checkIn.HasValue && checkOut.HasValue)
+        {
+            // Validate dates
+            if (checkIn >= checkOut)
+            {
+                logger.LogError("Check-in date must be before check-out date");
+                throw new ArgumentException("Check-in date must be before check-out date.");
+            }
+
+            // Filter rooms that are available for the specified dates
+            availableRooms = await GetAvailableRoomsForDatesAsync(hotel.Rooms, checkIn.Value, checkOut.Value);
+        }
+
         return new HotelResponseDto
         {
             Id = hotel.Id,
-            Name = hotel.Name,
+            Name = hotel.Name ?? string.Empty,
             StarRating = hotel.StarRating,
-            City = hotel.City.Name,
-            Location = hotel.Location,
-            Description = hotel.Description,
-            Images = hotel.Images.Select(i => i.Url).ToList(),
-            Reviews = hotel.Reviews.Select(r => new ReviewDto
+            City = hotel.City?.Name ?? "Unknown City",
+            Location = hotel.Location ?? "Unknown Location",
+            Description = hotel.Description ?? string.Empty,
+            ImageUrl = hotel.MainImage?.Url ?? string.Empty,
+            Images = hotel.Images?.Select(i => i.Url ?? string.Empty).ToList() ?? new List<string>(),
+            Amenities = hotel.Amenities,
+            AmenitiesList = Enum.GetValues(typeof(Amenities))
+                .Cast<Amenities>()
+                .Where(a => a != Amenities.None && hotel.Amenities.HasFlag(a))
+                .Select(a => a.ToString())
+                .ToList(),
+            Reviews = hotel.Reviews?.Select(r => new ReviewDto
             {
-                UserName = r.User.FullName,
+                UserName = r.User?.FullName ?? "Anonymous",
                 Rating = r.Rating,
-                Comment = r.Comment,
+                Comment = r.Comment ?? string.Empty,
                 CreatedAt = r.CreatedAt
-            }).ToList(),
-            Rooms = hotel.Rooms.Select(r => new RoomResponseDto
+            }).ToList() ?? new List<ReviewDto>(),
+            Rooms = availableRooms.Select(r => new RoomResponseDto
             {
                 Id = r.Id,
                 RoomType = r.Type.ToString(),
                 Price = r.PricePerNight,
                 MaxAdults = r.MaxAdults,
                 MaxChildren = r.MaxChildren,
-                AvailableQuantity = r.Quantity
-            }).ToList()
+                AvailableQuantity = checkIn.HasValue && checkOut.HasValue 
+                    ? GetAvailableRoomQuantity(r, checkIn.Value, checkOut.Value)
+                    : r.Quantity,
+                ImageUrl = r.ImageUrl ?? string.Empty
+            }).ToList(),
+            CreatedAt = hotel.CreatedAt,
+            UpdatedAt = hotel.UpdatedAt
         };
+    }
+
+    private async Task<IEnumerable<Room>> GetAvailableRoomsForDatesAsync(ICollection<Room> rooms, DateTime checkIn, DateTime checkOut)
+    {
+        var availableRooms = new List<Room>();
+
+        foreach (var room in rooms)
+        {
+            var availableQuantity = GetAvailableRoomQuantity(room, checkIn, checkOut);
+            if (availableQuantity > 0)
+            {
+                availableRooms.Add(room);
+            }
+        }
+
+        return availableRooms;
+    }
+
+    private int GetAvailableRoomQuantity(Room room, DateTime checkIn, DateTime checkOut)
+    {
+        // Get all confirmed bookings for this room that overlap with the requested dates
+        var overlappingBookings = context.BookingItems
+            .Count(bi => bi.RoomId == room.Id &&
+                         bi.Booking.Status != BookingStatus.Cancelled &&
+                         bi.CheckInDate < checkOut &&
+                         bi.CheckOutDate > checkIn);
+
+        return Math.Max(0, room.Quantity - overlappingBookings);
     }
 
     private void ValidateSearchDates(SearchHotelsDto dto)
