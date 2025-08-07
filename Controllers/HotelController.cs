@@ -28,15 +28,27 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
         }
     }
     
-    [HttpGet("{hotelId}")]
+    [HttpGet("{id}")]
     [Authorize]
-    public async Task<IActionResult> GetHotelDetails(int hotelId, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut)
+    public async Task<IActionResult> GetHotel(int id, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut)
     {
-        var details = await hotelService.GetHotelDetailsAsync(hotelId, checkIn, checkOut);
-
-        if (details == null) return NotFound();
-
-        return Ok(details);
+        try
+        {
+            HotelResponseDto hotel;
+            
+            // If check-in and check-out dates are provided, use the detailed method
+           
+                // Use the method that tracks recently viewed hotels for non-admin users
+                hotel = await hotelService.GetHotelByIdAsync(id,checkIn,checkOut, User);
+            
+            
+            return hotel != null ? Ok(hotel) : NotFound();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving hotel with ID {HotelId}", id);
+            return StatusCode(500, new { Message = "An error occurred while retrieving the hotel.", Details = ex.Message });
+        }
     }
        
     [HttpPost]
@@ -48,7 +60,7 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
             var (userId, userRole) = jwtService.GetUserInfoFromClaims(User);
             
             var createdHotel = await hotelService.CreateHotelAsync(hotelDto, userId, userRole);
-            return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.Id }, createdHotel);
+            return CreatedAtAction(nameof(GetHotel), new { id = createdHotel.Id }, createdHotel);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -129,21 +141,6 @@ public class HotelController(IHotelService hotelService, IJwtService jwtService,
         catch (Exception ex)
         {
             return StatusCode(500, new { Message = "An error occurred while retrieving hotels.", Details = ex.Message });
-        }
-    }
-
-    [HttpGet("{id}")]
-    [Authorize]
-    public async Task<IActionResult> GetHotelById(int id)
-    {
-        try
-        {
-            var hotel = await hotelService.GetHotelByIdAsync(id);
-            return hotel != null ? Ok(hotel) : NotFound();
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { Message = "An error occurred while retrieving the hotel.", Details = ex.Message });
         }
     }
 }
