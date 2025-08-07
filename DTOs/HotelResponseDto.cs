@@ -19,4 +19,5 @@ public class HotelResponseDto
     public  ICollection<string>? Images { get; set; }
     public  ICollection<ReviewDto>? Reviews { get; set; }
     public Amenities Amenities { get; set; }
+    public List<string> AmenitiesList { get; set; } = new List<string>();
 }
