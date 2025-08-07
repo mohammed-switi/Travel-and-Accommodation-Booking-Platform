@@ -28,7 +28,10 @@
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f63dcb30_002Dc7a7_002D49d9_002Db79c_002D15ab465cf193/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="RoomServiceTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;ProjectFolder&gt;ECE2BF06-DCD6-4E22-B6FE-3202CE6D07A5/d:Tests/d:ServicesTests&lt;/ProjectFolder&gt;
+  &lt;Or&gt;
+    &lt;ProjectFolder&gt;ECE2BF06-DCD6-4E22-B6FE-3202CE6D07A5/d:Tests/d:ServicesTests&lt;/ProjectFolder&gt;
+    &lt;ProjectFile&gt;ECE2BF06-DCD6-4E22-B6FE-3202CE6D07A5/d:Tests/d:Controllers/f:AuthControllerTests.cs&lt;/ProjectFile&gt;
+  &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
 	
 	
