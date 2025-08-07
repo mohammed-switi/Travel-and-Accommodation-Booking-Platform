@@ -15,13 +15,13 @@ namespace Final_Project.Services
         ILogger<BookingService> logger)
         : IBookingService
     {
-        private readonly ILogger<BookingService> _logger = logger;
 
         public async Task<BookingCart> GetOrCreateCartAsync(int userId)
         {
             var cart = await context.BookingCarts
                 .Include(c => c.Items)
                 .ThenInclude(i => i.Room)
+                .ThenInclude(i => i.Hotel)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart != null) return cart;
@@ -36,6 +36,7 @@ namespace Final_Project.Services
             DateTime checkOutDate)
         {
             // Validate dates
+            logger.LogInformation($"Adding room {roomId} to cart for user {userId} from {checkInDate} to {checkOutDate}");
             if (checkInDate >= checkOutDate)
             {
                 throw new ArgumentException("Check-in date must be before check-out date");
