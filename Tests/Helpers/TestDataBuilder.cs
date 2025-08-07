@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Security.Claims;
 using Final_Project.Data;
 using Final_Project.Enums;
 using Final_Project.Models;
@@ -416,6 +417,127 @@ public class TestDataBuilder
 
             return _review;
         }
+    }
+
+    #endregion
+
+    #region ClaimsPrincipal Builder
+
+    public static ClaimsPrincipal CreateClaimsPrincipal(string userId = null, string role = null)
+    {
+        var claims = new List<Claim>();
+        
+        if (userId != null)
+        {
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, userId));
+        }
+        
+        if (role != null)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var identity = new ClaimsIdentity(claims, "TestAuthentication");
+        return new ClaimsPrincipal(identity);
+    }
+
+    #endregion
+
+    #region RecentlyViewedHotel Builder
+
+    public RecentlyViewedHotelBuilder CreateRecentlyViewedHotel(int id = 1)
+    {
+        return new RecentlyViewedHotelBuilder(id);
+    }
+
+    public class RecentlyViewedHotelBuilder
+    {
+        private readonly RecentlyViewedHotel _recentlyViewedHotel;
+
+        public RecentlyViewedHotelBuilder(int id)
+        {
+            _recentlyViewedHotel = new RecentlyViewedHotel
+            {
+                Id = id,
+                UserId = 1,
+                HotelId = 1,
+                ViewedAt = DateTime.UtcNow
+            };
+        }
+
+        public RecentlyViewedHotelBuilder WithUser(int userId)
+        {
+            _recentlyViewedHotel.UserId = userId;
+            return this;
+        }
+
+        public RecentlyViewedHotelBuilder WithHotel(int hotelId)
+        {
+            _recentlyViewedHotel.HotelId = hotelId;
+            return this;
+        }
+
+        public RecentlyViewedHotelBuilder WithViewedAt(DateTime viewedAt)
+        {
+            _recentlyViewedHotel.ViewedAt = viewedAt;
+            return this;
+        }
+
+        public RecentlyViewedHotel Build() => _recentlyViewedHotel;
+    }
+
+    #endregion
+
+    #region BookingItem Builder
+
+    public BookingItemBuilder CreateBookingItem(int id = 1)
+    {
+        return new BookingItemBuilder(id);
+    }
+
+    public class BookingItemBuilder
+    {
+        private readonly BookingItem _bookingItem;
+
+        public BookingItemBuilder(int id)
+        {
+            _bookingItem = new BookingItem
+            {
+                Id = id,
+                BookingId = 1,
+                RoomId = 1,
+                CheckInDate = DateTime.Today.AddDays(1),
+                CheckOutDate = DateTime.Today.AddDays(3),
+                Price = 200m
+            };
+        }
+
+        public BookingItemBuilder WithBooking(int bookingId)
+        {
+            _bookingItem.BookingId = bookingId;
+            return this;
+        }
+
+        public BookingItemBuilder WithRoom(int roomId)
+        {
+            _bookingItem.RoomId = roomId;
+            return this;
+        }
+
+        public BookingItemBuilder WithPrice(decimal price)
+        {
+            _bookingItem.Price = price;
+            return this;
+        }
+
+        public BookingItemBuilder WithDates(DateTime checkIn, DateTime checkOut)
+        {
+            _bookingItem.CheckInDate = checkIn;
+            _bookingItem.CheckOutDate = checkOut;
+            return this;
+        }
+
+        public BookingItem Build() => _bookingItem;
     }
 
     #endregion
