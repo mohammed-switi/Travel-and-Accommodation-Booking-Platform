@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Final_Project.Enums;
 using Final_Project.Constants;
 
@@ -30,7 +31,8 @@ public class Hotel
 
     public int? MainImageId { get; set; }
 
-    [ForeignKey("MainImageId")] public HotelImage MainImage { get; set; }
+    [ForeignKey("MainImageId")] 
+    public HotelImage MainImage { get; set; }
     public ICollection<HotelImage> Images { get; set; }
 
     public ICollection<Review> Reviews { get; set; }
