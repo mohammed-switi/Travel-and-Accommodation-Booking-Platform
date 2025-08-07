@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Final_Project.Enums;
 
 namespace Final_Project.Models;
@@ -10,6 +11,7 @@ public class Booking
     [ForeignKey("User")]
     public int UserId { get; set; }
 
+    [JsonIgnore]
     public User User { set; get; }
     
     public string BookingReference { get; set; } = Guid.NewGuid().ToString();

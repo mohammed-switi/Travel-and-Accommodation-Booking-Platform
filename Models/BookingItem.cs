@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Final_Project.Models;
 
@@ -9,6 +10,8 @@ public class BookingItem
 
     [Required]
     public int BookingId { get; set; }
+    
+    [JsonIgnore]    
     public Booking Booking { get; set; }
 
     [Required]
