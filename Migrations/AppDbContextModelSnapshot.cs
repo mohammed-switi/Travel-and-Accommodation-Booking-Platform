@@ -54,11 +54,11 @@ namespace Final_Project.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SpecialRequests")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
@@ -88,6 +88,8 @@ namespace Final_Project.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("BookingCarts");
                 });
@@ -141,9 +143,6 @@ namespace Final_Project.Migrations
                     b.Property<DateTime>("CheckOutDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Nights")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
@@ -179,7 +178,6 @@ namespace Final_Project.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostOffice")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -226,7 +224,7 @@ namespace Final_Project.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OwnerId")
+                    b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
                     b.Property<int>("StarRating")
@@ -412,6 +410,17 @@ namespace Final_Project.Migrations
                     b.HasOne("Final_Project.Models.User", "User")
                         .WithMany("Bookings")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Final_Project.Models.BookingCart", b =>
+                {
+                    b.HasOne("Final_Project.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -420,7 +429,7 @@ namespace Final_Project.Migrations
 
             modelBuilder.Entity("Final_Project.Models.BookingCartItem", b =>
                 {
-                    b.HasOne("Final_Project.Models.BookingCart", null)
+                    b.HasOne("Final_Project.Models.BookingCart", "BookingCart")
                         .WithMany("Items")
                         .HasForeignKey("BookingCartId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -429,8 +438,10 @@ namespace Final_Project.Migrations
                     b.HasOne("Final_Project.Models.Room", "Room")
                         .WithMany()
                         .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("BookingCart");
 
                     b.Navigation("Room");
                 });
@@ -446,7 +457,7 @@ namespace Final_Project.Migrations
                     b.HasOne("Final_Project.Models.Room", "Room")
                         .WithMany("BookingItems")
                         .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Booking");
@@ -459,7 +470,7 @@ namespace Final_Project.Migrations
                     b.HasOne("Final_Project.Models.City", "City")
                         .WithMany("Hotels")
                         .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Final_Project.Models.HotelImage", "MainImage")
@@ -469,7 +480,9 @@ namespace Final_Project.Migrations
 
                     b.HasOne("Final_Project.Models.User", "Owner")
                         .WithMany()
-                        .HasForeignKey("OwnerId");
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("City");
 
@@ -519,7 +532,7 @@ namespace Final_Project.Migrations
                     b.HasOne("Final_Project.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Hotel");
