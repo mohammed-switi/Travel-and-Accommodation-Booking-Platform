@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Final_Project.Constants;
 
 namespace Final_Project.Models;
@@ -18,9 +19,12 @@ public class User
 
     public string Role { get; set; } = UserRoles.User; // Default role
 
+    
     public ICollection<Booking> Bookings { get; set; }
     public ICollection<RecentlyViewedHotel> RecentlyViewedHotels { get; set; }
 
     public string? PasswordResetToken { get; set; }
     public DateTime? PasswordResetTokenExpiration { get; set; }
+    
+    
 }
