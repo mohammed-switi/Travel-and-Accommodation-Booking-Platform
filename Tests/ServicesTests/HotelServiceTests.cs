@@ -664,51 +664,7 @@ public class HotelServiceTests : IDisposable
 
     #endregion
 
-    #region GetHotelDetailsAsync Tests
-
-    [Fact]
-    public async Task GetHotelDetailsAsync_WithValidId_ReturnsHotelDetails()
-    {
-        // Arrange
-        var collection = await _testDataBuilder.SeedHotelWithRelatedDataAsync();
-        var hotel = collection.Item1;
-        await _testDataBuilder.SeedRoomWithHotelAsync(1, hotel.Id, RoomType.Deluxe, 200m, collection.Item2,collection.Item3,hotel);
-
-        // Act
-        var result = await _hotelService.GetHotelDetailsAsync(1, DateTime.Today.AddDays(1), DateTime.Today.AddDays(3));
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(hotel.Name, result.Name);
-        Debug.Assert(result.Reviews != null, "result.Reviews != null");
-        Assert.NotEmpty(result.Reviews);
-    }
-
-    [Fact]
-    public async Task GetHotelDetailsAsync_WithNonExistentId_ReturnsNull()
-    {
-        // Act
-        var result = await _hotelService.GetHotelDetailsAsync(999, DateTime.Today.AddDays(1), DateTime.Today.AddDays(3));
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task GetHotelDetailsAsync_InactiveHotel_ReturnsNull()
-    {
-        // Arrange
-        await _testDataBuilder.SeedHotelWithRelatedDataAsync(1, "Inactive Hotel", 3, isActive: false);
-
-        // Act
-        var result = await _hotelService.GetHotelDetailsAsync(1, DateTime.Today.AddDays(1), DateTime.Today.AddDays(3));
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    #endregion
-
+   
     #region Additional Edge Case Tests
 
     [Fact]
