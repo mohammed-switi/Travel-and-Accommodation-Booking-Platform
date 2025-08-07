@@ -108,6 +108,7 @@ The API will be available at:
 ├── Middlewares/        # Custom middleware
 ├── Migrations/         # EF Core migrations
 └── Tests/              # Unit and integration tests
+─ postman-collectionm.json # Postman Collection
 ```
 
 ### Key Components
