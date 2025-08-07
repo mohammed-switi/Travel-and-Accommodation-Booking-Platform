@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  travel-booking-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=TravelBookingDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;
+      - ConnectionStrings__RedisConnection=redis:6378
+    depends_on:
+      - sqlserver
+      - redis
+    networks:
+      - travel-booking-network
+    volumes:
+      - ./appsettings.Development.json:/app/appsettings.Development.json:ro
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - travel-booking-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6378:6378"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - travel-booking-network
+
+
+volumes:
+  sqlserver_data:
+  redis_data:
+
+networks:
+  travel-booking-network:
+    driver: bridge
